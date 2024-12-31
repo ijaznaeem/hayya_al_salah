@@ -139,61 +139,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: const CustomAppBar(title: 'Home'),
+      appBar: const CustomAppBar(title: 'Hayya Alal Salah'),
       body: Column(
         children: [
-          if (topMovies.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.all(10.0),
-              child: ClipRect(
-                /** Banner Widget **/
-                child: Banner(
-                  message: "20% off !!",
-                  location: BannerLocation.bottomStart,
-                  color: Colors.red,
-                  child: Container(
-                    color: Colors.green[100],
-                    height: 300,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 20, 10, 20),
-                      child: Column(
-                        children: <Widget>[
-                          Image.network(
-                              'https://media.geeksforgeeks.org/wp-content/cdn-uploads/20190806131525/forkPython.jpg'), //Image.network
-                          const SizedBox(height: 10),
-                          const Text(
-                            'GeeksforGeeks',
-                            style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 40,
-                                fontWeight: FontWeight.bold), //TextStyle
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ), //SizedBox
-                          const Text(
-                            'Fork Python Course',
-                            style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold), //TextStyle
-                          ), //Text
-                          const SizedBox(height: 20),
-
-                          // RaiseButton is deprecated and should not be used. Use ElevatedButton instead.
-
-                          // RaisedButton(
-                          // color: Colors.greenAccent[400],
-                          // onPressed: () {},
-                          // child: const Text('Register'),
-                          // ) //RaisedButton
-                        ], //<Widget>[]
-                      ), //Column
-                    ), //Padding
-                  ), //Container
-                ), //Banner
-              ), //ClipRect
+          // Add banner image
+          Container(
+            width: double.infinity,
+            height: 200.0,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/banner_image.png'),
+                fit: BoxFit.cover,
+              ),
             ),
+          ),
           Expanded(
             child: NotificationListener<ScrollNotification>(
               onNotification: (ScrollNotification scrollInfo) {

@@ -18,8 +18,8 @@ class _TrailerScreenState extends State<TrailerScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(
-        "https://github.com/GeekyAnts/flick-video-player-demo-videos/blob/master/example/the_valley_compressed.mp4?raw=true"))
+    _controller = VideoPlayerController.networkUrl(
+        Uri.parse("https://salah.pakperegrine.com/storage/lect1.mpeg"))
       ..initialize().then((_) {
         setState(() {});
       });
