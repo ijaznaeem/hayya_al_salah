@@ -18,11 +18,15 @@ class _TrailerScreenState extends State<TrailerScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(
-        Uri.parse("https://salah.pakperegrine.com/storage/lect1.mpeg"))
+    _controller = VideoPlayerController.asset('assets/videos/vidOne.mp4')
       ..initialize().then((_) {
         setState(() {});
       });
+    // _controller = VideoPlayerController.networkUrl(Uri.parse(
+    //     "https://github.com/ijaznaeem/hayya_al_salah/blob/master/videos/niyyat_ka_maani_awr_ahmiyyat.mpeg?raw=true"))
+    //   ..initialize().then((_) {
+    //     setState(() {});
+    //   });
   }
 
   @override
