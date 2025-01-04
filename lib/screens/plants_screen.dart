@@ -15,14 +15,12 @@ class PlantsScreen extends StatelessWidget {
         foregroundColor: Colors.black,
         elevation: 0.2,
       ),
-      body: Center(
+      body: const Center(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const <Widget>[
-            Image(
-                image: AssetImage(kIconPathBottomNavigationBarPlants),
-                height: 100.0),
+          children: <Widget>[
+            Image(image: AssetImage(tabIconFav), height: 100.0),
             SizedBox(height: 50.0),
             Text(
               'My Sweet Plants',

@@ -5,6 +5,7 @@ class Movie {
   final int categoryID;
   final String pdfFile;
   final String animationFile;
+  final String videoFile;
   final String image; // New field for movie thumbnail
   final String genre; // New field for movie genre
 
@@ -15,6 +16,7 @@ class Movie {
     required this.categoryID,
     required this.pdfFile,
     required this.animationFile,
+    required this.videoFile,
     required this.image, // Initialize the new field
     required this.genre, // Initialize the new field
   });
@@ -27,6 +29,7 @@ class Movie {
       'categoryID': categoryID,
       'pdfFile': pdfFile,
       'animationFile': animationFile,
+      'videoFile': videoFile,
       'image': image, // Add the new field to the map
       'genre': genre, // Add the new field to the map
     };

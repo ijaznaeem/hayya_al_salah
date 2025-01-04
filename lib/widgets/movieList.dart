@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/movie.dart';
-import 'package:hayya_al_salah/screens/trailer_screen.dart';
+
+import '../screens/video_screen.dart';
 
 class MovieList extends StatelessWidget {
   final List<Movie> movies;
@@ -35,7 +36,7 @@ class MovieList extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text('Genre: ${movie.genre}'), // Display genre
               ),
-              if (movie.animationFile.isNotEmpty)
+              if (movie.videoFile.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: ElevatedButton(
@@ -43,7 +44,7 @@ class MovieList extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TrailerScreen(movie: movie),
+                          builder: (context) => VideoScreen(movie: movie),
                         ),
                       );
                     },

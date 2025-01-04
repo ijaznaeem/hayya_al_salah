@@ -16,11 +16,27 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+    // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Awesome Bottom Navigation',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: const MaterialColor(
+          0xFFB0B42B,
+          <int, Color>{
+            50: Color(0xFFF5F5DC),
+            100: Color(0xFFE5E5B8),
+            200: Color(0xFFD5D594),
+            300: Color(0xFFC5C570),
+            400: Color(0xFFB5B54C),
+            500: Color(0xFFA5A528),
+            600: Color(0xFF959514),
+            700: Color(0xFF858500),
+            800: Color(0xFF757500),
+            900: Color(0xFF656500),
+          },
+        ),
       ),
       home: const MainScreen(),
     );

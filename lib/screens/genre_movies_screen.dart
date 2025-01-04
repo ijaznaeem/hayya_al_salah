@@ -68,6 +68,7 @@ class _GenreMoviesScreenState extends State<GenreMoviesScreen> {
           categoryID: 0, // You can set a default or parse if available
           pdfFile: '', // Not available in API response
           animationFile: trailerLink, // Trailer link
+          videoFile: '', // Not available in API response
           image: 'https://image.tmdb.org/t/p/w500${movieData['poster_path']}',
           genre: (movieData['genre_ids'] as List)
               .map((id) => genreMap[id])

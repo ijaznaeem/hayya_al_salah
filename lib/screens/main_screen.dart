@@ -33,7 +33,7 @@ class _MainScreenState extends State<MainScreen> {
         screens: _buildScreens(),
         items: _navBarsItems(),
         confineToSafeArea: true,
-        backgroundColor: Colors.amber,
+        backgroundColor: const Color(0xFF656500),
         handleAndroidBackButtonPress: true,
         resizeToAvoidBottomInset: true,
         stateManagement: true,
@@ -65,7 +65,7 @@ class _MainScreenState extends State<MainScreen> {
             SizedBox(
               height: kSizeBottomNavigationBarIconHeight,
               child: Image.asset(
-                kIconPathBottomNavigationBarHome,
+                tabIconHome,
               ),
             ),
           ],
@@ -75,7 +75,7 @@ class _MainScreenState extends State<MainScreen> {
             SizedBox(
               height: kSizeBottomNavigationBarIconHeight,
               child: Image.asset(
-                kIconPathBottomNavigationBarHomeDeactive,
+                tabIconHomeI,
               ),
             ),
           ],
@@ -91,7 +91,7 @@ class _MainScreenState extends State<MainScreen> {
             SizedBox(
               height: kSizeBottomNavigationBarIconHeight,
               child: Image.asset(
-                kIconPathBottomNavigationBarAnimals,
+                tabIconCats,
               ),
             ),
           ],
@@ -101,7 +101,7 @@ class _MainScreenState extends State<MainScreen> {
             SizedBox(
               height: kSizeBottomNavigationBarIconHeight,
               child: Image.asset(
-                kIconPathBottomNavigationBarAnimalsDeactive,
+                tabIconCatsI,
               ),
             ),
           ],
@@ -116,7 +116,7 @@ class _MainScreenState extends State<MainScreen> {
             SizedBox(
               height: kSizeBottomNavigationBarIconHeight,
               child: Image.asset(
-                kIconPathBottomNavigationBarPlants,
+                tabIconFav,
               ),
             ),
           ],
@@ -126,13 +126,13 @@ class _MainScreenState extends State<MainScreen> {
             SizedBox(
               height: kSizeBottomNavigationBarIconHeight,
               child: Image.asset(
-                kIconPathBottomNavigationBarPlantsDeactive,
+                tabIconFavI,
               ),
             ),
           ],
         ),
         title: ('Favorites'),
-        activeColorPrimary: kColorBNBActiveTitleColor,
+        activeColorPrimary: Colors.white,
         inactiveColorPrimary: kColorBNBDeactiveTitleColor,
       ),
     ];

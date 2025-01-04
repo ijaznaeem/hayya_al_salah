@@ -15,8 +15,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Movie> movies = [];
-  List<Movie> topMovies = [];
   int currentPage = 1;
+  int pageLimit = 10;
   bool isLoading = false;
   bool hasMore = true;
   Map<int, String> genreMap = {};
@@ -26,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     fetchGenres();
     fetchTrendingMovies();
-    fetchTopMovies();
   }
 
   Future<void> fetchGenres() async {
@@ -52,24 +51,24 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     final response = await http.get(Uri.parse(
-        'https://api.themoviedb.org/3/trending/movie/week?api_key=eae26be244b6ba02e8ee80cfc64acb5a&page=$currentPage'));
+        'https://salah.pakperegrine.com/apis/index.php/apis/videos?limit=$pageLimit&offset=${(currentPage - 1) * pageLimit}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       final List<Movie> fetchedMovies =
-          await Future.wait((data['results'] as List).map((movieData) async {
-        final trailerLink = await fetchMovieTrailer(movieData['id']);
+          await Future.wait((data as List).map((movieData) async {
         return Movie(
-          movieID: movieData['id'],
+          movieID: int.tryParse(movieData['videoID']) ?? 0,
           title: movieData['title'],
-          description: movieData['overview'],
-          categoryID: 0, // You can set a default or parse if available
+          description: movieData['description'],
+          categoryID: int.tryParse(movieData['categoryID']) ??
+              0, // You can set a default or parse if available
           pdfFile: '', // Not available in API response
-          animationFile: trailerLink, // Trailer link
-          image: 'https://image.tmdb.org/t/p/w500${movieData['poster_path']}',
-          genre: (movieData['genre_ids'] as List)
-              .map((id) => genreMap[id])
-              .join(', '), // Convert genre IDs to names
+          animationFile: movieData['animationFile'] ?? "", // Trailer link
+          videoFile: movieData['videoFile'] ?? "", // Trailer link
+          image:
+              'https://salah.pakperegrine.com/apis/uploads/${movieData['image']}',
+          genre: '', // Convert genre IDs to names
         );
       }).toList());
 
@@ -84,54 +83,6 @@ class _HomeScreenState extends State<HomeScreen> {
         isLoading = false;
       });
       throw Exception('Failed to load trending movies');
-    }
-  }
-
-  Future<void> fetchTopMovies() async {
-    final response = await http.get(Uri.parse(
-        'https://api.themoviedb.org/3/trending/movie/day?api_key=eae26be244b6ba02e8ee80cfc64acb5a'));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final List<Movie> fetchedMovies = await Future.wait(
-          (data['results'] as List).take(5).map((movieData) async {
-        final trailerLink = await fetchMovieTrailer(movieData['id']);
-        return Movie(
-          movieID: movieData['id'],
-          title: movieData['title'],
-          description: movieData['overview'],
-          categoryID: 0, // You can set a default or parse if available
-          pdfFile: '', // Not available in API response
-          animationFile: trailerLink, // Trailer link
-          image: 'https://image.tmdb.org/t/p/w500${movieData['poster_path']}',
-          genre: (movieData['genre_ids'] as List)
-              .map((id) => genreMap[id])
-              .join(', '), // Convert genre IDs to names
-        );
-      }).toList());
-
-      setState(() {
-        topMovies = fetchedMovies;
-      });
-    } else {
-      throw Exception('Failed to load top movies');
-    }
-  }
-
-  Future<String> fetchMovieTrailer(int movieId) async {
-    final response = await http.get(Uri.parse(
-        'https://api.themoviedb.org/3/movie/$movieId/videos?api_key=eae26be244b6ba02e8ee80cfc64acb5a'));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final trailer = (data['results'] as List).firstWhere(
-          (video) => video['type'] == 'Trailer' && video['site'] == 'YouTube',
-          orElse: () => null);
-      return trailer != null
-          ? 'https://www.youtube.com/watch?v=${trailer['key']}'
-          : '';
-    } else {
-      return '';
     }
   }
 
