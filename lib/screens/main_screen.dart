@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hayya_al_salah/screens/geners_screen.dart';
+import 'package:hayya_al_salah/screens/categories_screen.dart';
+import 'package:hayya_al_salah/screens/favorites_screen.dart';
 import 'package:hayya_al_salah/screens/home_screen.dart';
-import 'package:hayya_al_salah/screens/plants_screen.dart';
 import 'package:hayya_al_salah/utilities/icon_path_util.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 
@@ -33,7 +33,7 @@ class _MainScreenState extends State<MainScreen> {
         screens: _buildScreens(),
         items: _navBarsItems(),
         confineToSafeArea: true,
-        backgroundColor: const Color(0xFF656500),
+        backgroundColor: Colors.white,
         handleAndroidBackButtonPress: true,
         resizeToAvoidBottomInset: true,
         stateManagement: true,
@@ -52,8 +52,8 @@ class _MainScreenState extends State<MainScreen> {
   List<Widget> _buildScreens() {
     return [
       const HomeScreen(),
-      const GenersScreen(),
-      const PlantsScreen(),
+      const CategoriesScreen(),
+      const FavoritesScreen(),
     ];
   }
 

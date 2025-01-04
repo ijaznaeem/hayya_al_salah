@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/movie.dart';
+import 'package:hayya_al_salah/screens/player_widget.dart';
 import 'package:hayya_al_salah/widgets/appBr.dart';
-import 'package:video_player/video_player.dart';
 
 class VideoScreen extends StatefulWidget {
   final Movie movie;
@@ -13,7 +13,6 @@ class VideoScreen extends StatefulWidget {
 }
 
 class _VideoScreenState extends State<VideoScreen> {
-  late VideoPlayerController _controller;
   bool isPlaying = false;
   bool isFavorite = false;
 
@@ -21,24 +20,19 @@ class _VideoScreenState extends State<VideoScreen> {
   void initState() {
     super.initState();
 
-    _controller =
-        VideoPlayerController.networkUrl(Uri.parse(widget.movie.videoFile))
-          ..initialize().then((_) {
-            setState(() {
-              _controller.play();
-              _onVideoStarted();
-            });
-          });
-  }
-
-  void _onVideoStarted() {
-    // Add your event handling code here
-    print("Video has started playing");
+    // _controller =
+    //     VideoPlayerController.networkUrl(Uri.parse(widget.movie.videoFile))
+    //       ..initialize().then((_) {
+    //         setState(() {
+    //           _controller.play();
+    //           _onVideoStarted();
+    //         });
+    //       });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    // _controller.dispose();
     super.dispose();
   }
 
@@ -52,67 +46,23 @@ class _VideoScreenState extends State<VideoScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (true)
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (_controller.value.isInitialized)
-                      AspectRatio(
-                        aspectRatio: 1, // Set aspect ratio to 1:1
-                        child: VideoPlayer(_controller),
-                      ),
-                    if (!isPlaying)
-                      Image.network(
-                        widget
-                            .movie.image, // Assuming movie has a image property
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: 392.7, // Set a finite height
-                        alignment: Alignment.center,
-                        filterQuality: FilterQuality.medium,
-                      ),
-                  ],
-                ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.replay_10),
-                      onPressed: () {
-                        _controller.seekTo(
-                          _controller.value.position -
-                              const Duration(seconds: 10),
-                        );
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        _controller.value.isPlaying
-                            ? Icons.pause
-                            : Icons.play_arrow,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _controller.value.isPlaying
-                              ? _controller.pause()
-                              : _controller.play();
-                          isPlaying = !isPlaying;
-                        });
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.forward_10),
-                      onPressed: () {
-                        _controller.seekTo(
-                          _controller.value.position +
-                              const Duration(seconds: 10),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1, // Set aspect ratio to 1:1
+                    child: DefaultPlayer(videoUrl: widget.movie.videoFile),
+                  ),
+                  // if (!isPlaying)
+                  //   Image.network(
+                  //     widget.movie.image, // Assuming movie has a image property
+                  //     fit: BoxFit.cover,
+                  //     width: double.infinity,
+                  //     height: 392.7, // Set a finite height
+                  //     alignment: Alignment.center,
+                  //     filterQuality: FilterQuality.medium,
+                  //   ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),

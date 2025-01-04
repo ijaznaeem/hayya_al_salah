@@ -2,42 +2,44 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/genre.dart';
-import 'package:hayya_al_salah/screens/genre_movies_screen.dart';
+import 'package:hayya_al_salah/widgets/appBr.dart';
 import 'package:http/http.dart' as http;
 
-class GenersScreen extends StatefulWidget {
-  const GenersScreen({Key? key}) : super(key: key);
+import 'category_video_screen.dart';
+
+class CategoriesScreen extends StatefulWidget {
+  const CategoriesScreen({Key? key}) : super(key: key);
 
   @override
-  _GenersScreenState createState() => _GenersScreenState();
+  _CategoriesScreenState createState() => _CategoriesScreenState();
 }
 
-class _GenersScreenState extends State<GenersScreen> {
-  List<Genre> genres = [];
-  List<Genre> filteredGenres = [];
+class _CategoriesScreenState extends State<CategoriesScreen> {
+  List<Categories> genres = [];
+  List<Categories> filteredCategories = [];
   bool isLoading = true;
   TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    fetchGenres();
+    fetchCategories();
     searchController.addListener(() {
-      filterGenres();
+      filterCategories();
     });
   }
 
-  Future<void> fetchGenres() async {
+  Future<void> fetchCategories() async {
     final response = await http.get(Uri.parse(
-        'https://api.themoviedb.org/3/genre/movie/list?api_key=eae26be244b6ba02e8ee80cfc64acb5a&language=en-US'));
+        'https://salah.pakperegrine.com/apis/index.php/apis/categories'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
-        genres = (data['genres'] as List)
-            .map((genreData) => Genre.fromJson(genreData))
+        genres = (data as List)
+            .map((genreData) => Categories.fromJson(genreData))
             .toList();
-        filteredGenres = genres;
+        filteredCategories = genres;
         isLoading = false;
       });
     } else {
@@ -45,11 +47,11 @@ class _GenersScreenState extends State<GenersScreen> {
     }
   }
 
-  void filterGenres() {
+  void filterCategories() {
     final query = searchController.text.toLowerCase();
     setState(() {
-      filteredGenres = genres
-          .where((genre) => genre.genreName.toLowerCase().contains(query))
+      filteredCategories = genres
+          .where((genre) => genre.categoryName.toLowerCase().contains(query))
           .toList();
     });
   }
@@ -58,12 +60,7 @@ class _GenersScreenState extends State<GenersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text('Geners'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.2,
-      ),
+      appBar: const CustomAppBar(title: "Categories"),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -73,25 +70,25 @@ class _GenersScreenState extends State<GenersScreen> {
                   child: TextField(
                     controller: searchController,
                     decoration: const InputDecoration(
-                      labelText: 'Search Genres',
+                      labelText: 'Search Categories',
                       border: OutlineInputBorder(),
                     ),
                   ),
                 ),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: filteredGenres.length,
+                    itemCount: filteredCategories.length,
                     itemBuilder: (context, index) {
-                      final genre = filteredGenres[index];
+                      final genre = filteredCategories[index];
                       return ListTile(
-                        title: Text(genre.genreName),
+                        title: Text(genre.categoryName),
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => GenreMoviesScreen(
-                                genreId: genre.genreId,
-                                genreName: genre.genreName,
+                              builder: (context) => CategoryVideoScreen(
+                                categoryId: genre.categoryId,
+                                categoryName: genre.categoryName,
                               ),
                             ),
                           );

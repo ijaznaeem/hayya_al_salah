@@ -1,13 +1,13 @@
-class Genre {
-  final int genreId;
-  final String genreName;
+class Categories {
+  final int categoryId;
+  final String categoryName;
 
-  Genre({required this.genreId, required this.genreName});
+  Categories({required this.categoryId, required this.categoryName});
 
-  factory Genre.fromJson(Map<String, dynamic> json) {
-    return Genre(
-      genreId: json['id'],
-      genreName: json['name'],
+  factory Categories.fromJson(Map<String, dynamic> json) {
+    return Categories(
+      categoryId: int.tryParse(json['categoryID']) ?? 0,
+      categoryName: json['categoryName'],
     );
   }
 }
