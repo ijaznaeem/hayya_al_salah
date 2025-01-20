@@ -5,6 +5,8 @@ import 'package:hayya_al_salah/models/movie.dart';
 import 'package:hayya_al_salah/widgets/movieList.dart';
 import 'package:http/http.dart' as http;
 
+import '../widgets/appBr.dart';
+
 class CategoryVideoScreen extends StatefulWidget {
   final int categoryId;
   final String categoryName;
@@ -19,25 +21,27 @@ class CategoryVideoScreen extends StatefulWidget {
 
 class _CategoryVideoScreenState extends State<CategoryVideoScreen> {
   List<Movie> movies = [];
-  bool isLoading = true;
   int currentPage = 1;
+  int pageLimit = 10;
+  bool isLoading = false;
   bool hasMore = true;
-  Map<int, String> categoryMap = {};
+  Map<int, String> genreMap = {};
 
   @override
   void initState() {
     super.initState();
-    fetchVideosByCats();
+    ftechByCategory();
   }
 
-  Future<void> fetchVideosByCats() async {
+  Future<void> ftechByCategory() async {
     if (isLoading) return;
 
     setState(() {
       isLoading = true;
     });
-    final response = await http.get(
-        Uri.parse('https://salah.pakperegrine.com/apis/index.php/apis/videos'));
+
+    final response = await http.get(Uri.parse(
+        'https://salah.pakperegrine.com/apis/index.php/apis/videos?limit=$pageLimit&offset=${(currentPage - 1) * pageLimit}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -54,7 +58,7 @@ class _CategoryVideoScreenState extends State<CategoryVideoScreen> {
           videoFile: movieData['videoFile'] ?? "", // Trailer link
           image:
               'https://salah.pakperegrine.com/apis/uploads/${movieData['image']}',
-          genre: '', // Convert genre IDs to names
+          genre: movieData['genre'] ?? '', // Convert genre IDs to names
         );
       }).toList());
 
@@ -65,7 +69,10 @@ class _CategoryVideoScreenState extends State<CategoryVideoScreen> {
         movies.addAll(fetchedMovies);
       });
     } else {
-      throw Exception('Failed to load videos');
+      setState(() {
+        isLoading = false;
+      });
+      throw Exception('Failed to load trending movies');
     }
   }
 
@@ -73,23 +80,35 @@ class _CategoryVideoScreenState extends State<CategoryVideoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(widget.categoryName),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.2,
-      ),
-      body: NotificationListener<ScrollNotification>(
-        onNotification: (ScrollNotification scrollInfo) {
-          if (!isLoading &&
-              hasMore &&
-              scrollInfo.metrics.pixels ==
-                  scrollInfo.metrics.maxScrollExtent) {}
-          return false;
-        },
-        child: movies.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : MovieList(movies: movies), // Use the reusable widget
+      appBar: CustomAppBar(title: widget.categoryName),
+      body: Column(
+        children: [
+          // Add banner image
+          Container(
+            width: double.infinity,
+            height: 200.0,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/banner_image.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Expanded(
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification scrollInfo) {
+                if (!isLoading &&
+                    hasMore &&
+                    scrollInfo.metrics.pixels ==
+                        scrollInfo.metrics.maxScrollExtent) {}
+                return false;
+              },
+              child: movies.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : MovieList(movies: movies), // Use the reusable widget
+            ),
+          ),
+        ],
       ),
     );
   }

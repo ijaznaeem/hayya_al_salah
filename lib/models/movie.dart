@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class Movie {
   final int movieID;
   final String title;
@@ -33,5 +35,23 @@ class Movie {
       'image': image, // Add the new field to the map
       'genre': genre, // Add the new field to the map
     };
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory Movie.fromJson(String source) => Movie.fromMap(json.decode(source));
+
+  factory Movie.fromMap(Map<String, dynamic> map) {
+    return Movie(
+      movieID: map['movieID'],
+      title: map['title'],
+      description: map['description'],
+      categoryID: map['categoryID'],
+      pdfFile: map['pdfFile'],
+      animationFile: map['animationFile'],
+      videoFile: map['videoFile'],
+      image: map['image'],
+      genre: map['genre'],
+    );
   }
 }

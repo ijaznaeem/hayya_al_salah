@@ -3,6 +3,10 @@ import 'package:hayya_al_salah/models/movie.dart';
 import 'package:hayya_al_salah/screens/player_widget.dart';
 import 'package:hayya_al_salah/widgets/appBr.dart';
 
+import '../helpers/shared_pref_helper.dart';
+import '../utilities/snack_util.dart';
+import '../widgets/custom_button.dart';
+
 class VideoScreen extends StatefulWidget {
   final Movie movie;
 
@@ -15,19 +19,11 @@ class VideoScreen extends StatefulWidget {
 class _VideoScreenState extends State<VideoScreen> {
   bool isPlaying = false;
   bool isFavorite = false;
+  final SharedPrefHelper _prefHelper = SharedPrefHelper();
 
   @override
   void initState() {
     super.initState();
-
-    // _controller =
-    //     VideoPlayerController.networkUrl(Uri.parse(widget.movie.videoFile))
-    //       ..initialize().then((_) {
-    //         setState(() {
-    //           _controller.play();
-    //           _onVideoStarted();
-    //         });
-    //       });
   }
 
   @override
@@ -36,89 +32,119 @@ class _VideoScreenState extends State<VideoScreen> {
     super.dispose();
   }
 
+  Future<void> _addObject(Movie m) async {
+    await _prefHelper.addMovie(m);
+  }
+
+  Future<void> _removeObject(int id) async {
+    await _prefHelper.removeMovie(id);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(title: widget.movie.title),
-      body: SingleChildScrollView(
-        child: Container(
-          color: const Color(0xFFD5D594),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  AspectRatio(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/background1.jpg'),
+                fit: BoxFit.cover,
+                opacity: 0.3)),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: AspectRatio(
                     aspectRatio: 1, // Set aspect ratio to 1:1
                     child: DefaultPlayer(videoUrl: widget.movie.videoFile),
                   ),
-                  // if (!isPlaying)
-                  //   Image.network(
-                  //     widget.movie.image, // Assuming movie has a image property
-                  //     fit: BoxFit.cover,
-                  //     width: double.infinity,
-                  //     height: 392.7, // Set a finite height
-                  //     alignment: Alignment.center,
-                  //     filterQuality: FilterQuality.medium,
-                  //   ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      flex: 5,
-                      child: Text(
-                        widget.movie.title,
-                        style: const TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: IconButton(
-                        icon: const Icon(Icons.download_rounded),
-                        color: Colors.red,
-                        onPressed: () {
-                          // Add share functionality here
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: IconButton(
-                        icon: const Icon(Icons.run_circle_rounded),
-                        color: Color(0xFF656500),
-                        onPressed: () {
-                          // Add download functionality here
-                        },
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text(widget.movie.description),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: IconButton(
-                  icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite ? Colors.red : null,
+                Container(
+                    padding: const EdgeInsets.only(top: 20, bottom: 20),
+                    width: MediaQuery.of(context).size.width / 1.1,
+                    decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(20)),
+                    child: Text(
+                      widget.movie.title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    )),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: CustomButton(
+                            icon: Icons.favorite_rounded,
+                            label: "favorite",
+                            isNormal: true,
+                            onPressed: () {
+                              setState(() {
+                                isFavorite = !isFavorite;
+                                if (isFavorite) {
+                                  _addObject(widget.movie);
+                                  showSnack(context, 'Added to favorites');
+                                } else {
+                                  _removeObject(widget.movie.movieID);
+                                  showSnack(context, 'Removed from favorites');
+                                }
+                              });
+                            }),
+                      ),
+                      const SizedBox(width: 10), // Adds 5 pixel space
+                      Expanded(
+                        child: CustomButton(
+                            icon: Icons.download_rounded,
+                            label: "Download",
+                            isNormal: true,
+                            onPressed: () {
+                              // Add share functionality here
+                            }),
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    setState(() {
-                      isFavorite = !isFavorite;
-                    });
-                  },
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: CustomButton(
+                          icon: Icons.animation_rounded,
+                          label: "Animation",
+                          isNormal: true,
+                          onPressed: () {
+                            // Add share functionality here
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  // _formKey!.currentState!.validate() ? 200 : 600,
+                  // height: isEmailCorrect ? 260 : 182,
+                  width: MediaQuery.of(context).size.width / 1.1,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      // Your other widgets here
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

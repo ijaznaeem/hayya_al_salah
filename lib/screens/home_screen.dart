@@ -24,23 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    fetchGenres();
     fetchTrendingMovies();
-  }
-
-  Future<void> fetchGenres() async {
-    final response = await http.get(Uri.parse(
-        'https://api.themoviedb.org/3/genre/movie/list?api_key=eae26be244b6ba02e8ee80cfc64acb5a&language=en-US'));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      setState(() {
-        genreMap = Map.fromIterable(data['genres'],
-            key: (genre) => genre['id'], value: (genre) => genre['name']);
-      });
-    } else {
-      throw Exception('Failed to load genres');
-    }
   }
 
   Future<void> fetchTrendingMovies() async {
@@ -50,8 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading = true;
     });
 
-    final response = await http.get(Uri.parse(
-        'https://salah.pakperegrine.com/apis/index.php/apis/videos?limit=$pageLimit&offset=${(currentPage - 1) * pageLimit}'));
+    final response = await http.get(
+        Uri.parse('https://salah.pakperegrine.com/apis/index.php/apis/videos'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -68,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
           videoFile: movieData['videoFile'] ?? "", // Trailer link
           image:
               'https://salah.pakperegrine.com/apis/uploads/${movieData['image']}',
-          genre: '', // Convert genre IDs to names
+          genre: movieData['genre'] ?? '', // Convert genre IDs to names
         );
       }).toList());
 
@@ -91,36 +75,43 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: const CustomAppBar(title: 'Hayya Alal Salah'),
-      body: Column(
-        children: [
-          // Add banner image
-          Container(
-            width: double.infinity,
-            height: 200.0,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/banner_image.png'),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/background1.jpg'),
                 fit: BoxFit.cover,
+                opacity: 0.3)),
+        child: Column(
+          children: [
+            // Add banner image
+            Container(
+              width: double.infinity,
+              height: 200.0,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/banner_image.png'),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (ScrollNotification scrollInfo) {
-                if (!isLoading &&
-                    hasMore &&
-                    scrollInfo.metrics.pixels ==
-                        scrollInfo.metrics.maxScrollExtent) {
-                  fetchTrendingMovies();
-                }
-                return false;
-              },
-              child: movies.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : MovieList(movies: movies), // Use the reusable widget
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (ScrollNotification scrollInfo) {
+                  if (!isLoading &&
+                      hasMore &&
+                      scrollInfo.metrics.pixels ==
+                          scrollInfo.metrics.maxScrollExtent) {}
+                  return false;
+                },
+                child: movies.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : MovieList(movies: movies), // Use the reusable widget
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

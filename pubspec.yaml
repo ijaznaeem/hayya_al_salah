@@ -54,13 +54,14 @@ dependencies:
   flutter_native_splash: ^2.4.4
   flick_video_player: ^0.9.0
   visibility_detector: ^0.4.0+2
+  shared_preferences: ^2.3.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^4.0.0
-
+  
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -109,3 +110,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+flutter_native_splash:
+  color: "#42a5f5"
+  image: assets/images/splash.png

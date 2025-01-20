@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/screens/categories_screen.dart';
 import 'package:hayya_al_salah/screens/favorites_screen.dart';
 import 'package:hayya_al_salah/screens/home_screen.dart';
-import 'package:hayya_al_salah/utilities/icon_path_util.dart';
-import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
+
+// import 'package:hayya_al_salah/utilities/icon_path_util.dart';
 
 import '../utilities/constant.dart';
 
@@ -15,126 +15,68 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  PersistentTabController? _controller;
-  int? selectedIndex;
+  int _selectedIndex = 0;
 
-  @override
-  void initState() {
-    _controller = PersistentTabController();
+  static const List<Widget> _widgetOptions = <Widget>[
+    HomeScreen(),
+    CategoriesScreen(),
+    FavoritesScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: PersistentTabView(
-        context,
-        controller: _controller,
-        navBarHeight: kSizeBottomNavigationBarHeight,
-        screens: _buildScreens(),
-        items: _navBarsItems(),
-        confineToSafeArea: true,
-        backgroundColor: Colors.white,
-        handleAndroidBackButtonPress: true,
-        resizeToAvoidBottomInset: true,
-        stateManagement: true,
-        navBarStyle: NavBarStyle.style14,
-        onItemSelected: (final index) {
-          setState(() {
-            _controller?.index = index; // THIS IS CRITICAL!! Don't miss it!
-
-            if (index == 1) {}
-          });
-        },
+    return WillPopScope(
+      onWillPop: () async {
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Exit App'),
+              content: const Text('Do you really want to exit the app?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Yes'),
+                ),
+              ],
+            );
+          },
+        );
+        return shouldPop ?? false;
+      },
+      child: Scaffold(
+        body: _widgetOptions.elementAt(_selectedIndex),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.category),
+              label: 'Topics',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite),
+              label: 'Favorites',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: kColorBNBActiveTitleColor,
+          unselectedItemColor: kColorBNBDeactiveTitleColor,
+          onTap: _onItemTapped,
+        ),
       ),
     );
-  }
-
-  List<Widget> _buildScreens() {
-    return [
-      const HomeScreen(),
-      const CategoriesScreen(),
-      const FavoritesScreen(),
-    ];
-  }
-
-  List<PersistentBottomNavBarItem> _navBarsItems() {
-    return [
-      PersistentBottomNavBarItem(
-        icon: Column(
-          children: [
-            SizedBox(
-              height: kSizeBottomNavigationBarIconHeight,
-              child: Image.asset(
-                tabIconHome,
-              ),
-            ),
-          ],
-        ),
-        inactiveIcon: Column(
-          children: [
-            SizedBox(
-              height: kSizeBottomNavigationBarIconHeight,
-              child: Image.asset(
-                tabIconHomeI,
-              ),
-            ),
-          ],
-        ),
-        title: ('Home'),
-        activeColorPrimary: kColorBNBActiveTitleColor,
-        textStyle: const TextStyle(color: Colors.red),
-        inactiveColorPrimary: kColorBNBDeactiveTitleColor,
-      ),
-      PersistentBottomNavBarItem(
-        icon: Column(
-          children: [
-            SizedBox(
-              height: kSizeBottomNavigationBarIconHeight,
-              child: Image.asset(
-                tabIconCats,
-              ),
-            ),
-          ],
-        ),
-        inactiveIcon: Column(
-          children: [
-            SizedBox(
-              height: kSizeBottomNavigationBarIconHeight,
-              child: Image.asset(
-                tabIconCatsI,
-              ),
-            ),
-          ],
-        ),
-        title: ('Categories'),
-        activeColorPrimary: kColorBNBActiveTitleColor,
-        inactiveColorPrimary: kColorBNBDeactiveTitleColor,
-      ),
-      PersistentBottomNavBarItem(
-        icon: Column(
-          children: [
-            SizedBox(
-              height: kSizeBottomNavigationBarIconHeight,
-              child: Image.asset(
-                tabIconFav,
-              ),
-            ),
-          ],
-        ),
-        inactiveIcon: Column(
-          children: [
-            SizedBox(
-              height: kSizeBottomNavigationBarIconHeight,
-              child: Image.asset(
-                tabIconFavI,
-              ),
-            ),
-          ],
-        ),
-        title: ('Favorites'),
-        activeColorPrimary: Colors.white,
-        inactiveColorPrimary: kColorBNBDeactiveTitleColor,
-      ),
-    ];
   }
 }

@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
     // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Awesome Bottom Navigation',
+      title: '',
       theme: ThemeData(
         primarySwatch: const MaterialColor(
           0xFFB0B42B,
