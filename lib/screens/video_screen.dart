@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/movie.dart';
-import 'package:hayya_al_salah/screens/player_widget.dart';
 import 'package:hayya_al_salah/widgets/appBr.dart';
+import 'package:hayya_al_salah/widgets/video_in_sized_box.dart';
 
 import '../helpers/shared_pref_helper.dart';
 import '../utilities/snack_util.dart';
@@ -24,12 +24,15 @@ class _VideoScreenState extends State<VideoScreen> {
   @override
   void initState() {
     super.initState();
+    checkIfFavorite();
   }
 
-  @override
-  void dispose() {
-    // _controller.dispose();
-    super.dispose();
+  Future<void> checkIfFavorite() async {
+    final List<Movie> favoriteMovies = await _prefHelper.getMovieList();
+    setState(() {
+      isFavorite =
+          favoriteMovies.any((movie) => movie.movieID == widget.movie.movieID);
+    });
   }
 
   Future<void> _addObject(Movie m) async {
@@ -43,27 +46,22 @@ class _VideoScreenState extends State<VideoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: widget.movie.title),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/background1.jpg'),
-                fit: BoxFit.cover,
-                opacity: 0.3)),
-        child: SafeArea(
-          child: SingleChildScrollView(
+        appBar: CustomAppBar(title: widget.movie.title),
+        body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage('assets/images/background1.jpg'),
+                    fit: BoxFit.cover,
+                    opacity: 0.3)),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: AspectRatio(
-                    aspectRatio: 1, // Set aspect ratio to 1:1
-                    child: DefaultPlayer(videoUrl: widget.movie.videoFile),
-                  ),
+                VideoInSizedBox(
+                  videoUrl: widget.movie.videoFile,
+                  bannerUrl: widget.movie.image,
                 ),
+                const SizedBox(height: 10),
                 Container(
                     padding: const EdgeInsets.only(top: 20, bottom: 20),
                     width: MediaQuery.of(context).size.width / 1.1,
@@ -76,6 +74,7 @@ class _VideoScreenState extends State<VideoScreen> {
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold),
                     )),
+                const SizedBox(height: 6),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -84,8 +83,8 @@ class _VideoScreenState extends State<VideoScreen> {
                       Expanded(
                         child: CustomButton(
                             icon: Icons.favorite_rounded,
-                            label: "favorite",
-                            isNormal: true,
+                            label: "Favorite",
+                            isNormal: !isFavorite,
                             onPressed: () {
                               setState(() {
                                 isFavorite = !isFavorite;
@@ -137,18 +136,13 @@ class _VideoScreenState extends State<VideoScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Column(
-                    children: [
-                      // Your other widgets here
-                    ],
+                  child: Text(
+                    widget.movie.description,
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
               ],
-            ),
-          ),
-        ),
-      ),
-    );
+            )));
   }
 }
 //https://github.com/GeekyAnts/flick-video-player-demo-videos/blob/master/example/the_valley_compressed.mp4?raw=true

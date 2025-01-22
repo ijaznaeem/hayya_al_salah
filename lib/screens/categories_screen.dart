@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/genre.dart';
 import 'package:hayya_al_salah/widgets/appBr.dart';
 import 'package:http/http.dart' as http;
+import 'package:shimmer/shimmer.dart'; // Add this import
 
 import 'category_video_screen.dart';
 
@@ -70,7 +71,46 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 fit: BoxFit.cover,
                 opacity: 0.3)),
         child: isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? ListView.builder(
+                itemCount: 5,
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    period:
+                        const Duration(seconds: 2), // Add animation duration
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                height: 20,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(height: 5),
+                              Container(
+                                width: double.infinity,
+                                height: 20,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
             : SafeArea(
                 child: SingleChildScrollView(
                   child: Column(

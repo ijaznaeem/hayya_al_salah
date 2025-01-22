@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/movie.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../screens/video_screen.dart';
 import 'custom_button.dart';
@@ -27,8 +29,23 @@ class MovieList extends StatelessWidget {
                     builder: (context) => VideoScreen(movie: movie),
                   );
                 },
-                child: Image.network(movie.image,
-                    width: double.infinity, height: 200, fit: BoxFit.cover),
+                child: CachedNetworkImage(
+                  imageUrl: movie.image,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    period: const Duration(seconds: 2),
+                    child: Container(
+                      width: double.infinity,
+                      height: 200,
+                      color: Colors.white,
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                ),
               ),
               Container(
                   padding: const EdgeInsets.only(top: 20, bottom: 20),

@@ -5,6 +5,7 @@ import 'package:hayya_al_salah/models/movie.dart';
 import 'package:hayya_al_salah/widgets/appBr.dart';
 import 'package:hayya_al_salah/widgets/movieList.dart';
 import 'package:http/http.dart' as http;
+import 'package:shimmer/shimmer.dart'; // Add this import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -106,7 +107,62 @@ class _HomeScreenState extends State<HomeScreen> {
                   return false;
                 },
                 child: movies.isEmpty
-                    ? const Center(child: CircularProgressIndicator())
+                    ? ListView.builder(
+                        itemCount: 2,
+                        itemBuilder: (context, index) => Card(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 200,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Container(
+                                padding:
+                                    const EdgeInsets.only(top: 20, bottom: 20),
+                                width: MediaQuery.of(context).size.width / 1.1,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 20,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding:
+                                    const EdgeInsets.only(top: 20, bottom: 20),
+                                width: MediaQuery.of(context).size.width / 1.1,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 20,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8.0),
+                            ],
+                          ),
+                        ),
+                      )
                     : MovieList(movies: movies), // Use the reusable widget
               ),
             ),

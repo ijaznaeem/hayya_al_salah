@@ -1,9 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/movie.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../helpers/shared_pref_helper.dart'; // Import the helper
 import '../screens/video_screen.dart'; // Import the VideoScreen
-import '../utilities/icon_path_util.dart';
 import '../widgets/appBr.dart';
 import '../widgets/button_styles.dart';
 
@@ -53,18 +54,37 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 fit: BoxFit.cover,
                 opacity: 0.3)),
         child: favoriteMovies.isEmpty
-            ? const Center(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Image(image: AssetImage(tabIconFav), height: 100.0),
-                    SizedBox(height: 50.0),
-                    Text(
-                      'Favorites Videos',
-                      style: TextStyle(fontSize: 24),
+            ? ListView.builder(
+                itemCount: 5,
+                itemBuilder: (context, index) => ListTile(
+                  title: Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    child: Container(
+                      padding: const EdgeInsets.only(top: 8, bottom: 8),
+                      height: 50,
+                      width: MediaQuery.of(context).size.width / 1.1,
+                      color: Colors.white,
                     ),
-                  ],
+                  ),
+                  leading: Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      color: Colors.white,
+                    ),
+                  ),
+                  trailing: Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               )
             : ListView.builder(
@@ -94,11 +114,19 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           ),
                         );
                       },
-                      child: Image.network(movie.image, width: 50, height: 50),
+                      child: CachedNetworkImage(
+                        imageUrl: movie.image,
+                        width: 50,
+                        height: 50,
+                        placeholder: (context, url) =>
+                            const CircularProgressIndicator(),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.error),
+                      ),
                     ),
                     trailing: IconButton(
                       style: buttonStyle(false),
-                      icon: Icon(Icons.delete),
+                      icon: const Icon(Icons.delete),
                       onPressed: () => removeFavoriteMovie(movie.movieID),
                     ),
                   );

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/movie.dart';
 import 'package:hayya_al_salah/widgets/movieList.dart';
 import 'package:http/http.dart' as http;
+import 'package:shimmer/shimmer.dart';
 
 import '../widgets/appBr.dart';
 
@@ -81,34 +82,83 @@ class _CategoryVideoScreenState extends State<CategoryVideoScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: CustomAppBar(title: widget.categoryName),
-      body: Column(
-        children: [
-          // Add banner image
-          Container(
-            width: double.infinity,
-            height: 200.0,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/banner_image.png'),
-                fit: BoxFit.cover,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.greenAccent[100],
+        child: Column(
+          children: [
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (ScrollNotification scrollInfo) {
+                  if (!isLoading &&
+                      hasMore &&
+                      scrollInfo.metrics.pixels ==
+                          scrollInfo.metrics.maxScrollExtent) {}
+                  return false;
+                },
+                child: movies.isEmpty
+                    ? ListView.builder(
+                        itemCount: 2,
+                        itemBuilder: (context, index) => Card(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 200,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Container(
+                                padding:
+                                    const EdgeInsets.only(top: 20, bottom: 20),
+                                width: MediaQuery.of(context).size.width / 1.1,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 20,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding:
+                                    const EdgeInsets.only(top: 20, bottom: 20),
+                                width: MediaQuery.of(context).size.width / 1.1,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 20,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8.0),
+                            ],
+                          ),
+                        ),
+                      )
+                    : MovieList(movies: movies), // Use the reusable widget
               ),
             ),
-          ),
-          Expanded(
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (ScrollNotification scrollInfo) {
-                if (!isLoading &&
-                    hasMore &&
-                    scrollInfo.metrics.pixels ==
-                        scrollInfo.metrics.maxScrollExtent) {}
-                return false;
-              },
-              child: movies.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : MovieList(movies: movies), // Use the reusable widget
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hayya_al_salah/screens/main_screen.dart';
+
+import 'widgets/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,11 +17,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    // WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-    // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: '',
+      title: 'Hayya Al Salah',
       theme: ThemeData(
         primarySwatch: const MaterialColor(
           0xFFB0B42B,
@@ -38,7 +37,7 @@ class MyApp extends StatelessWidget {
           },
         ),
       ),
-      home: const MainScreen(),
+      home: SplashScreen(), // Set SplashScreen as the home widget
     );
   }
 }
