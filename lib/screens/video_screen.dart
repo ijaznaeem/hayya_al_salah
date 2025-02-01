@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/movie.dart';
 import 'package:hayya_al_salah/widgets/appBr.dart';
 import 'package:hayya_al_salah/widgets/video_in_sized_box.dart';
+import 'package:url_launcher/url_launcher.dart'; // Import url_launcher package
 
 import '../helpers/shared_pref_helper.dart';
 import '../utilities/snack_util.dart';
@@ -41,6 +42,14 @@ class _VideoScreenState extends State<VideoScreen> {
 
   Future<void> _removeObject(int id) async {
     await _prefHelper.removeMovie(id);
+  }
+
+  Future<void> _downloadFile(String url, String fileName) async {
+    final Uri uri = Uri.parse(url);
+    await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
   }
 
   @override
@@ -102,32 +111,35 @@ class _VideoScreenState extends State<VideoScreen> {
                       Expanded(
                         child: CustomButton(
                             icon: Icons.download_rounded,
-                            label: "Download",
+                            label: "Download PDF",
                             isNormal: true,
                             onPressed: () {
-                              // Add share functionality here
+                              _downloadFile(
+                                  "https://salah.pakperegrine.com/apis/uploads/${widget.movie.pdfFile}",
+                                  '${widget.movie.title}.pdf');
                             }),
                       ),
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: CustomButton(
-                          icon: Icons.animation_rounded,
-                          label: "Animation",
-                          isNormal: true,
-                          onPressed: () {
-                            // Add share functionality here
-                          },
+                if (widget.movie.animationFile.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: CustomButton(
+                            icon: Icons.animation_rounded,
+                            label: "Animation",
+                            isNormal: true,
+                            onPressed: () {
+                              // Add animation functionality here
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
                 Container(
                   padding: const EdgeInsets.all(8),
                   // _formKey!.currentState!.validate() ? 200 : 600,
@@ -146,3 +158,4 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 }
 //https://github.com/GeekyAnts/flick-video-player-demo-videos/blob/master/example/the_valley_compressed.mp4?raw=true
+

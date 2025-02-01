@@ -58,6 +58,13 @@ dependencies:
   chewie: ^1.9.2
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
+  dio_cache_interceptor: ^3.5.1
+  dio_cache_interceptor_hive_store: ^4.0.0
+  permission_handler: ^11.3.1
+  flutter_downloader: ^1.11.8
+  change_app_package_name: ^1.4.0
+  open_filex: ^4.6.0
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

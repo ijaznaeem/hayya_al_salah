@@ -23,10 +23,11 @@ class MovieList extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (context) => VideoScreen(movie: movie),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VideoScreen(movie: movie),
+                    ),
                   );
                 },
                 child: CachedNetworkImage(
@@ -60,6 +61,19 @@ class MovieList extends StatelessWidget {
                         fontSize: 16, fontWeight: FontWeight.bold),
                   )),
               Container(
+                padding: const EdgeInsets.all(2),
+                // _formKey!.currentState!.validate() ? 200 : 600,
+                // height: isEmailCorrect ? 260 : 182,
+                width: MediaQuery.of(context).size.width / 1.1,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  movie.description,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+              Container(
                   padding: const EdgeInsets.only(top: 20, bottom: 20),
                   width: MediaQuery.of(context).size.width / 1.1,
                   decoration: BoxDecoration(
@@ -79,10 +93,11 @@ class MovieList extends StatelessWidget {
                       isNormal: true,
                       icon: Icons.play_arrow,
                       onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) => VideoScreen(movie: movie),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VideoScreen(movie: movie),
+                          ),
                         );
                       },
                       label: 'Watch Video',

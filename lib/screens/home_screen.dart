@@ -1,11 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/movie.dart';
+import 'package:hayya_al_salah/services/api_service.dart'; // Add this import
 import 'package:hayya_al_salah/widgets/appBr.dart';
 import 'package:hayya_al_salah/widgets/movieList.dart';
-import 'package:http/http.dart' as http;
-import 'package:shimmer/shimmer.dart'; // Add this import
+import 'package:shimmer/shimmer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -21,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = false;
   bool hasMore = true;
   Map<int, String> genreMap = {};
+  final ApiService _apiService = ApiService(); // Add this line
 
   @override
   void initState() {
@@ -35,25 +34,23 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading = true;
     });
 
-    final response = await http.get(
-        Uri.parse('https://salah.pakperegrine.com/apis/index.php/apis/videos'));
+    final response = await _apiService.get('videos');
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = response.data;
       final List<Movie> fetchedMovies =
           await Future.wait((data as List).map((movieData) async {
         return Movie(
           movieID: int.tryParse(movieData['videoID']) ?? 0,
           title: movieData['title'],
           description: movieData['description'],
-          categoryID: int.tryParse(movieData['categoryID']) ??
-              0, // You can set a default or parse if available
-          pdfFile: '', // Not available in API response
-          animationFile: movieData['animationFile'] ?? "", // Trailer link
-          videoFile: movieData['videoFile'] ?? "", // Trailer link
+          categoryID: int.tryParse(movieData['categoryID']) ?? 0,
+          pdfFile: movieData['pdfFile'] ?? "",
+          animationFile: movieData['animationFile'] ?? "",
+          videoFile: movieData['videoFile'] ?? "",
           image:
               'https://salah.pakperegrine.com/apis/uploads/${movieData['image']}',
-          genre: movieData['genre'] ?? '', // Convert genre IDs to names
+          genre: movieData['genre'] ?? '',
         );
       }).toList());
 

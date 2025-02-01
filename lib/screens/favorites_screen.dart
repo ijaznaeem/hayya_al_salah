@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/movie.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../helpers/shared_pref_helper.dart'; // Import the helper
 import '../screens/video_screen.dart'; // Import the VideoScreen
@@ -54,37 +53,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 fit: BoxFit.cover,
                 opacity: 0.3)),
         child: favoriteMovies.isEmpty
-            ? ListView.builder(
-                itemCount: 5,
-                itemBuilder: (context, index) => ListTile(
-                  title: Shimmer.fromColors(
-                    baseColor: Colors.grey[300]!,
-                    highlightColor: Colors.grey[100]!,
-                    child: Container(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      height: 50,
-                      width: MediaQuery.of(context).size.width / 1.1,
-                      color: Colors.white,
-                    ),
-                  ),
-                  leading: Shimmer.fromColors(
-                    baseColor: Colors.grey[300]!,
-                    highlightColor: Colors.grey[100]!,
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      color: Colors.white,
-                    ),
-                  ),
-                  trailing: Shimmer.fromColors(
-                    baseColor: Colors.grey[300]!,
-                    highlightColor: Colors.grey[100]!,
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      color: Colors.white,
-                    ),
-                  ),
+            ? Center(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  width: MediaQuery.of(context).size.width / 1.1,
+                  decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: const Text("No Favorites",
+                      style: TextStyle(color: Colors.purple),
+                      textAlign: TextAlign.center),
                 ),
               )
             : ListView.builder(

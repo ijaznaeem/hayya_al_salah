@@ -1,10 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:hayya_al_salah/models/genre.dart';
+import 'package:hayya_al_salah/services/api_service.dart'; // Add this import
 import 'package:hayya_al_salah/widgets/appBr.dart';
-import 'package:http/http.dart' as http;
-import 'package:shimmer/shimmer.dart'; // Add this import
+import 'package:shimmer/shimmer.dart';
 
 import 'category_video_screen.dart';
 
@@ -20,6 +18,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   List<Categories> filteredCategories = [];
   bool isLoading = true;
   TextEditingController searchController = TextEditingController();
+  final ApiService _apiService = ApiService(); // Add this line
 
   @override
   void initState() {
@@ -31,11 +30,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Future<void> fetchCategories() async {
-    final response = await http.get(Uri.parse(
-        'https://salah.pakperegrine.com/apis/index.php/apis/categories'));
+    final response = await _apiService.get('categories');
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = response.data;
       setState(() {
         genres = (data as List)
             .map((genreData) => Categories.fromJson(genreData))
