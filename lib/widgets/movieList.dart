@@ -50,7 +50,7 @@ class MovieList extends StatelessWidget {
               ),
               Container(
                   padding: const EdgeInsets.only(top: 20, bottom: 20),
-                  width: MediaQuery.of(context).size.width / 1.1,
+                  width: MediaQuery.of(context).size.width,
                   decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(20)),
@@ -60,31 +60,31 @@ class MovieList extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   )),
-              Container(
-                padding: const EdgeInsets.all(2),
-                // _formKey!.currentState!.validate() ? 200 : 600,
-                // height: isEmailCorrect ? 260 : 182,
-                width: MediaQuery.of(context).size.width / 1.1,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  movie.description,
-                  style: const TextStyle(fontSize: 12),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      movie.description,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'Topics: ${movie.genre}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
               ),
-              Container(
-                  padding: const EdgeInsets.only(top: 20, bottom: 20),
-                  width: MediaQuery.of(context).size.width / 1.1,
-                  decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(20)),
-                  child: Text(
-                    'Topics: ${movie.genre}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.normal),
-                  )),
               if (movie.videoFile.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
