@@ -69,6 +69,16 @@ class MovieList extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
+                      'Updated On: ${movie.updated_on}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
                       movie.description,
                       style: const TextStyle(fontSize: 12),
                     ),

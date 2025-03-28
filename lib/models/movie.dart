@@ -8,8 +8,9 @@ class Movie {
   final String pdfFile;
   final String animationFile;
   final String videoFile;
-  final String image; // New field for movie thumbnail
-  final String genre; // New field for movie genre
+  final String image;
+  final String genre;
+  final String updated_on;
 
   Movie({
     required this.movieID,
@@ -21,6 +22,7 @@ class Movie {
     required this.videoFile,
     required this.image, // Initialize the new field
     required this.genre, // Initialize the new field
+    required this.updated_on, // Initialize the new field
   });
 
   Map<String, dynamic> toMap() {
@@ -32,8 +34,9 @@ class Movie {
       'pdfFile': pdfFile,
       'animationFile': animationFile,
       'videoFile': videoFile,
-      'image': image, // Add the new field to the map
-      'genre': genre, // Add the new field to the map
+      'image': image,
+      'genre': genre,
+      'updated_on': updated_on,
     };
   }
 
@@ -52,6 +55,7 @@ class Movie {
       videoFile: map['videoFile'],
       image: map['image'],
       genre: map['genre'],
+      updated_on: map['updated_on'] ?? '',
     );
   }
 }

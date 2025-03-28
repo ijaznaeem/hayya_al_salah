@@ -51,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
           image:
               'https://salah.pakperegrine.com/apis/uploads/${movieData['image']}',
           genre: movieData['genre'] ?? '',
+          updated_on: movieData['updated_on'] ?? '',
         );
       }).toList());
 

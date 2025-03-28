@@ -69,7 +69,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 fit: BoxFit.cover,
                 opacity: 0.3)),
         child: isLoading
-            ? ListView.builder(
+            ? GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
                 itemCount: 5,
                 itemBuilder: (context, index) => Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -78,31 +83,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     highlightColor: Colors.grey[100]!,
                     period:
                         const Duration(seconds: 2), // Add animation duration
-                    child: Row(
+                    child: Column(
                       children: [
                         Container(
-                          width: 50,
-                          height: 50,
+                          width: double.infinity,
+                          height: 100,
                           color: Colors.white,
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                height: 20,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(height: 5),
-                              Container(
-                                width: double.infinity,
-                                height: 20,
-                                color: Colors.white,
-                              ),
-                            ],
-                          ),
+                        const SizedBox(height: 10),
+                        Container(
+                          width: double.infinity,
+                          height: 20,
+                          color: Colors.white,
                         ),
                       ],
                     ),
@@ -152,24 +144,48 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               ),
                             )),
                       ),
-                      ListView.builder(
+                      GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
                         itemCount: filteredCategories.length,
                         itemBuilder: (context, index) {
                           final genre = filteredCategories[index];
-                          return ListTile(
-                            title: Container(
-                              padding: const EdgeInsets.all(8),
-                              // _formKey!.currentState!.validate() ? 200 : 600,
-                              // height: isEmailCorrect ? 260 : 182,
-                              width: MediaQuery.of(context).size.width / 1.1,
-                              decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(20)),
-                              child: Text(genre.categoryName,
-                                  style: const TextStyle(color: Colors.purple),
-                                  textAlign: TextAlign.center),
+                          return GestureDetector(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  child: genre.image == ""
+                                      ? Image.asset(
+                                          'assets/images/placeholder.png',
+                                          height: MediaQuery.of(context)
+                                              .size
+                                              .height,
+                                        )
+                                      : Image.network(
+                                          "https://salah.pakperegrine.com/apis/uploads/topics/${genre.image}",
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.18,
+                                        ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  genre.categoryName,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                             onTap: () {
                               Navigator.push(
