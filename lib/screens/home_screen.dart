@@ -1,167 +1,153 @@
 import 'package:flutter/material.dart';
-import 'package:hayya_al_salah/models/movie.dart';
-import 'package:hayya_al_salah/services/api_service.dart'; // Add this import
-import 'package:hayya_al_salah/widgets/appBr.dart';
-import 'package:hayya_al_salah/widgets/movieList.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../models/quran_verse.dart';
+import '../models/topic.dart';
+import '../services/islamic_calendar_service.dart';
+import '../services/quran_api_service.dart';
+import 'lesson_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Movie> movies = [];
-  int currentPage = 1;
-  int pageLimit = 10;
-  bool isLoading = false;
-  bool hasMore = true;
-  Map<int, String> genreMap = {};
-  final ApiService _apiService = ApiService(); // Add this line
+  final QuranApiService _quranService = QuranApiService();
+  final IslamicCalendarService _calendarService = IslamicCalendarService();
+
+  QuranVerse? _currentVerse;
+  bool _isLoadingVerse = true;
+  Map<String, String> _currentDate = {};
 
   @override
   void initState() {
     super.initState();
-    fetchTrendingMovies();
+    _loadCurrentDate();
+    _loadRandomVerse();
   }
 
-  Future<void> fetchTrendingMovies() async {
-    if (isLoading) return;
-
+  void _loadCurrentDate() {
     setState(() {
-      isLoading = true;
+      _currentDate = _calendarService.getCurrentDate();
+    });
+  }
+
+  Future<void> _loadRandomVerse() async {
+    setState(() {
+      _isLoadingVerse = true;
     });
 
-    final response = await _apiService.get('videos');
-
-    if (response.statusCode == 200) {
-      final data = response.data;
-      final List<Movie> fetchedMovies =
-          await Future.wait((data as List).map((movieData) async {
-        return Movie(
-          movieID: int.tryParse(movieData['videoID']) ?? 0,
-          title: movieData['title'],
-          description: movieData['description'],
-          categoryID: int.tryParse(movieData['categoryID']) ?? 0,
-          pdfFile: movieData['pdfFile'] ?? "",
-          animationFile: movieData['animationFile'] ?? "",
-          videoFile: movieData['videoFile'] ?? "",
-          image:
-              'https://salah.pakperegrine.com/apis/uploads/${movieData['image']}',
-          genre: movieData['genre'] ?? '',
-          updated_on: movieData['updated_on'] ?? '',
-        );
-      }).toList());
-
+    try {
+      final verse = await _quranService.getRandomVerse();
       setState(() {
-        currentPage++;
-        isLoading = false;
-        hasMore = fetchedMovies.isNotEmpty;
-        movies.addAll(fetchedMovies);
+        _currentVerse = verse;
+        _isLoadingVerse = false;
       });
-    } else {
+    } catch (e) {
       setState(() {
-        isLoading = false;
+        _isLoadingVerse = false;
       });
-      throw Exception('Failed to load trending movies');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load verse')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: const CustomAppBar(title: 'Hayya Alal Salah'),
-      body: Container(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: Text(
+          'Hayya Al Salah',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: const Color(0xFF23514C),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadRandomVerse,
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          _loadCurrentDate();
+          await _loadRandomVerse();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Date Banner
+              _buildDateBanner(),
+
+              // Quranic Verse Section
+              _buildQuranVerseSection(),
+
+              // Topics Section
+              _buildTopicsSection(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateBanner() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      child: Container(
         width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/background1.jpg'),
-                fit: BoxFit.cover,
-                opacity: 0.3)),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF23514C),
+              Color(0xFF4A7B74),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Add banner image
-            Container(
-              width: double.infinity,
-              height: 200.0,
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/banner_image.png'),
-                  fit: BoxFit.cover,
-                ),
+            Text(
+              'Today',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (ScrollNotification scrollInfo) {
-                  if (!isLoading &&
-                      hasMore &&
-                      scrollInfo.metrics.pixels ==
-                          scrollInfo.metrics.maxScrollExtent) {}
-                  return false;
-                },
-                child: movies.isEmpty
-                    ? ListView.builder(
-                        itemCount: 2,
-                        itemBuilder: (context, index) => Card(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 200,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Container(
-                                padding:
-                                    const EdgeInsets.only(top: 20, bottom: 20),
-                                width: MediaQuery.of(context).size.width / 1.1,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Shimmer.fromColors(
-                                  baseColor: Colors.grey[300]!,
-                                  highlightColor: Colors.grey[100]!,
-                                  child: Container(
-                                    width: double.infinity,
-                                    height: 20,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding:
-                                    const EdgeInsets.only(top: 20, bottom: 20),
-                                width: MediaQuery.of(context).size.width / 1.1,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Shimmer.fromColors(
-                                  baseColor: Colors.grey[300]!,
-                                  highlightColor: Colors.grey[100]!,
-                                  child: Container(
-                                    width: double.infinity,
-                                    height: 20,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8.0),
-                            ],
-                          ),
-                        ),
-                      )
-                    : MovieList(movies: movies), // Use the reusable widget
+            const SizedBox(height: 8),
+            Text(
+              _currentDate['gregorian'] ?? 'Loading...',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _currentDate['islamic'] ?? 'Loading...',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                color: Colors.white70,
               ),
             ),
           ],
@@ -169,4 +155,269 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildQuranVerseSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.auto_stories,
+                color: Color(0xFF23514C),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Verse of the Day',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF23514C),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_isLoadingVerse)
+            const Center(
+              child: CircularProgressIndicator(),
+            )
+          else if (_currentVerse != null) ...[
+            // Arabic Text
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                _currentVerse!.arabicText,
+                style: GoogleFonts.amiri(
+                  fontSize: 20,
+                  height: 1.8,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.right,
+                textDirection: TextDirection.rtl,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // English Translation
+            Text(
+              'English Translation:',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _currentVerse!.englishTranslation,
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                height: 1.5,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Urdu Translation
+            Text(
+              'Urdu Translation:',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _currentVerse!.urduTranslation,
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                height: 1.5,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.right,
+            ),
+            const SizedBox(height: 12),
+
+            // Surah Info
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF23514C),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${_currentVerse!.surahNameEnglish} ${_currentVerse!.surah}:${_currentVerse!.ayah}',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ] else
+            const Text('Failed to load verse'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopicsSection() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Islamic Topics',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _sampleTopics
+                    .map((topic) => _buildTopicCard(topic))
+                    .toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopicCard(Topic topic) {
+    return Container(
+      width: 160,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LessonDetailScreen(topic: topic),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 100,
+              decoration: const BoxDecoration(
+                color: Color(0xFF23514C),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.play_circle_outline,
+                  size: 40,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    topic.title,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${topic.lessonsCount} lessons',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Sample topics data
+  List<Topic> get _sampleTopics => [
+        Topic(
+          id: '1',
+          title: 'Prayer Basics',
+          description: 'Learn the fundamentals of Islamic prayer',
+          imageUrl: '',
+          lessonsCount: 8,
+          duration: '2 hours',
+          lessons: [],
+        ),
+        Topic(
+          id: '2',
+          title: 'Quran Recitation',
+          description: 'Master the art of Quranic recitation',
+          imageUrl: '',
+          lessonsCount: 12,
+          duration: '3 hours',
+          lessons: [],
+        ),
+        Topic(
+          id: '3',
+          title: 'Islamic History',
+          description: 'Explore the rich history of Islam',
+          imageUrl: '',
+          lessonsCount: 15,
+          duration: '4 hours',
+          lessons: [],
+        ),
+      ];
 }

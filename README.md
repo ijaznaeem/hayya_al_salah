@@ -20,4 +20,4 @@ keytool -genkey -v -keystore hayya-alal-salah.keystore -alias hayya-alal-salah -
 ## signing Password
 Naeem123*
 ## Flutter build 
-flutter build appbundle  --build-number=1
+flutter build appbundle --build-name=1.1.1 --build-number=10

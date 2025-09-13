@@ -1,43 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import 'widgets/splash_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent, // transparent status bar
-  ));
-  runApp(const MyApp());
+  runApp(const HayyaAlSalahApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class HayyaAlSalahApp extends StatelessWidget {
+  const HayyaAlSalahApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Hayya Al Salah',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: const MaterialColor(
-          0xFFB0B42B,
-          <int, Color>{
-            50: Color(0xFFF5F5DC),
-            100: Color(0xFFE5E5B8),
-            200: Color(0xFFD5D594),
-            300: Color(0xFFC5C570),
-            400: Color(0xFFB5B54C),
-            500: Color(0xFFA5A528),
-            600: Color(0xFF959514),
-            700: Color(0xFF858500),
-            800: Color(0xFF757500),
-            900: Color(0xFF656500),
-          },
+        primarySwatch: Colors.green,
+        primaryColor: const Color(0xFF23514C),
+        fontFamily: GoogleFonts.inter().fontFamily,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF23514C),
+          brightness: Brightness.light,
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: const Color(0xFF23514C),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          titleTextStyle: GoogleFonts.inter(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
       ),
-      home: SplashScreen(), // Set SplashScreen as the home widget
+      home: const SplashScreen(),
     );
   }
 }
