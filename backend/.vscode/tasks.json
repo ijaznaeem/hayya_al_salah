@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Run PHP built-in server for admin panel",
+			"command": "php -S localhost:8000 -t public",
+			"group": "test",
+			"isBackground": true,
+			"problemMatcher": [],
+			"args": []
+		}
+	]
+}

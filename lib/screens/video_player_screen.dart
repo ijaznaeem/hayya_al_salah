@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 // import 'package:video_player/video_player.dart';
 // import 'package:chewie/chewie.dart';
 import '../models/topic.dart';
+import '../services/favorites_service.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final Lesson lesson;
@@ -23,11 +24,65 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   // VideoPlayerController? _videoController;
   // ChewieController? _chewieController;
   bool _isPlayerReady = false;
+  bool _isFavorite = false;
+  final FavoritesService _favoritesService = FavoritesService.instance;
 
   @override
   void initState() {
     super.initState();
     _initializePlayer();
+    _checkFavoriteStatus();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh favorite status when returning to this screen
+    _checkFavoriteStatus();
+  }
+
+  void _checkFavoriteStatus() async {
+    final isFavorite = await _favoritesService.isFavorite(widget.lesson.id);
+    setState(() {
+      _isFavorite = isFavorite;
+    });
+  }
+
+  void _toggleFavorite() async {
+    if (_isFavorite) {
+      // Remove from favorites
+      final success =
+          await _favoritesService.removeFromFavorites(widget.lesson.id);
+      if (success) {
+        setState(() {
+          _isFavorite = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Removed from favorites'),
+              backgroundColor: Color(0xFF23514C),
+            ),
+          );
+        }
+      }
+    } else {
+      // Add to favorites
+      final success = await _favoritesService.addToFavorites(widget.lesson);
+      if (success) {
+        setState(() {
+          _isFavorite = true;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Added to favorites'),
+              backgroundColor: Color(0xFF23514C),
+            ),
+          );
+        }
+      }
+    }
   }
 
   void _initializePlayer() {
@@ -210,6 +265,17 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 const SizedBox(width: 20),
                 _buildMetaInfo(Icons.attach_file, 'Reference'),
               ],
+              const Spacer(),
+              // Add to Favorites Button
+              IconButton(
+                onPressed: _toggleFavorite,
+                icon: Icon(
+                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: _isFavorite ? Colors.red : Colors.grey[600],
+                ),
+                tooltip:
+                    _isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+              ),
             ],
           ),
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/topic.dart';
+import '../services/api_service.dart';
 import 'video_player_screen.dart';
 
 class LessonDetailScreen extends StatefulWidget {
@@ -16,16 +18,91 @@ class LessonDetailScreen extends StatefulWidget {
 }
 
 class _LessonDetailScreenState extends State<LessonDetailScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  final ApiService _apiService = ApiService();
+
+  List<Lesson> _filteredLessons = [];
+  List<Lesson> _allLessons = [];
+  bool _isLoadingLessons = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLessons();
+    _searchController.addListener(_filterLessons);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadLessons() async {
+    setState(() {
+      _isLoadingLessons = true;
+    });
+
+    try {
+      await _apiService.initialize();
+
+      // Try to get lessons by topic ID if it's a number
+      List<Lesson> lessons = [];
+      final topicId = int.tryParse(widget.topic.id);
+
+      if (topicId != null) {
+        lessons = await _apiService.getLecturesByTopic(topicId);
+      }
+
+      // If no lessons from API or topic ID is not a number, use sample data
+      if (lessons.isEmpty) {
+        lessons = _getSampleLessons();
+      }
+
+      setState(() {
+        _allLessons = lessons;
+        _filteredLessons = lessons;
+        _isLoadingLessons = false;
+      });
+    } catch (e) {
+      setState(() {
+        _allLessons = _getSampleLessons(); // Fallback to sample data
+        _filteredLessons = _allLessons;
+        _isLoadingLessons = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Failed to load lessons, showing sample data')),
+        );
+      }
+    }
+  }
+
+  void _filterLessons() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredLessons = _allLessons;
+      } else {
+        _filteredLessons = _allLessons.where((lesson) {
+          return lesson.title.toLowerCase().contains(query) ||
+              lesson.description.toLowerCase().contains(query);
+        }).toList();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           widget.topic.title,
           style: GoogleFonts.inter(fontWeight: FontWeight.w600),
         ),
-        backgroundColor: const Color(0xFF23514C),
       ),
       body: Column(
         children: [
@@ -82,13 +159,130 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
 
           // Lessons List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _getSampleLessons().length,
-              itemBuilder: (context, index) {
-                final lesson = _getSampleLessons()[index];
-                return _buildLessonCard(lesson, index);
-              },
+            child: Column(
+              children: [
+                // Search Bar
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search lessons...',
+                      hintStyle: GoogleFonts.inter(
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.color,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                _filterLessons();
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context).cardColor,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    style: GoogleFonts.inter(
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                  ),
+                ),
+
+                // Lessons List
+                Expanded(
+                  child: _isLoadingLessons
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF23514C),
+                          ),
+                        )
+                      : _filteredLessons.isEmpty &&
+                              _searchController.text.isNotEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.search_off,
+                                    size: 64,
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.color,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No lessons found',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.color,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Try searching with different keywords',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.color,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : RefreshIndicator(
+                              onRefresh: _loadLessons,
+                              child: ListView.builder(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                itemCount: _filteredLessons.length,
+                                itemBuilder: (context, index) {
+                                  final lesson = _filteredLessons[index];
+                                  final originalIndex =
+                                      _allLessons.indexOf(lesson);
+                                  return _buildLessonCard(
+                                      lesson, originalIndex);
+                                },
+                              ),
+                            ),
+                ),
+              ],
             ),
           ),
         ],
@@ -146,7 +340,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             MaterialPageRoute(
               builder: (context) => VideoPlayerScreen(
                 lesson: lesson,
-                relatedLessons: _getSampleLessons(),
+                relatedLessons: _allLessons,
               ),
             ),
           );
@@ -161,7 +355,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF23514C),
+                  color: Theme.of(context).primaryColor,
                   borderRadius: BorderRadius.circular(25),
                 ),
                 child: Center(
@@ -188,7 +382,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -196,7 +390,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                       lesson.description,
                       style: GoogleFonts.inter(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -207,14 +401,14 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                         Icon(
                           Icons.play_circle_outline,
                           size: 16,
-                          color: Colors.grey[600],
+                          color: Theme.of(context).textTheme.bodySmall?.color,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           lesson.duration,
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                         if (lesson.referenceFileUrl != null) ...[
@@ -222,14 +416,15 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                           Icon(
                             Icons.attach_file,
                             size: 16,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             'Reference',
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color:
+                                  Theme.of(context).textTheme.bodySmall?.color,
                             ),
                           ),
                         ],
@@ -244,12 +439,12 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF23514C).withOpacity(0.1),
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.play_arrow,
-                  color: Color(0xFF23514C),
+                  color: Theme.of(context).primaryColor,
                   size: 24,
                 ),
               ),

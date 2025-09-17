@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import '../services/theme_service.dart';
 
 class ManageScreen extends StatefulWidget {
   const ManageScreen({super.key});
@@ -10,7 +13,6 @@ class ManageScreen extends StatefulWidget {
 
 class _ManageScreenState extends State<ManageScreen> {
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   bool _autoPlayEnabled = true;
   bool _downloadOverWifiOnly = true;
   String _selectedLanguage = 'English';
@@ -18,152 +20,157 @@ class _ManageScreenState extends State<ManageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          'Manage',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: const Color(0xFF23514C),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // User Profile Section
-            _buildProfileSection(),
-
-            // Settings Sections
-            _buildSettingsSection(
-              'Preferences',
-              [
-                _buildSwitchTile(
-                  'Notifications',
-                  'Receive prayer reminders and lesson updates',
-                  Icons.notifications_outlined,
-                  _notificationsEnabled,
-                  (value) => setState(() => _notificationsEnabled = value),
-                ),
-                _buildSwitchTile(
-                  'Dark Mode',
-                  'Enable dark theme',
-                  Icons.dark_mode_outlined,
-                  _darkModeEnabled,
-                  (value) => setState(() => _darkModeEnabled = value),
-                ),
-                _buildDropdownTile(
-                  'Language',
-                  'Select app language',
-                  Icons.language_outlined,
-                  _selectedLanguage,
-                  ['English', 'Arabic', 'Urdu'],
-                  (value) => setState(() => _selectedLanguage = value!),
-                ),
-              ],
+    return Consumer<ThemeService>(
+      builder: (context, themeService, child) {
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: AppBar(
+            title: Text(
+              'Manage',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
             ),
+          ),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                // User Profile Section
+                _buildProfileSection(),
 
-            _buildSettingsSection(
-              'Video Settings',
-              [
-                _buildSwitchTile(
-                  'Auto Play',
-                  'Automatically play next lesson',
-                  Icons.play_arrow_outlined,
-                  _autoPlayEnabled,
-                  (value) => setState(() => _autoPlayEnabled = value),
+                // Settings Sections
+                _buildSettingsSection(
+                  'Preferences',
+                  [
+                    _buildSwitchTile(
+                      'Notifications',
+                      'Receive prayer reminders and lesson updates',
+                      Icons.notifications_outlined,
+                      _notificationsEnabled,
+                      (value) => setState(() => _notificationsEnabled = value),
+                    ),
+                    _buildSwitchTile(
+                      'Dark Mode',
+                      'Enable dark theme',
+                      Icons.dark_mode_outlined,
+                      themeService.isDarkMode,
+                      (value) => themeService.toggleTheme(),
+                    ),
+                    _buildDropdownTile(
+                      'Language',
+                      'Select app language',
+                      Icons.language_outlined,
+                      _selectedLanguage,
+                      ['English', 'Arabic', 'Urdu'],
+                      (value) => setState(() => _selectedLanguage = value!),
+                    ),
+                  ],
                 ),
-                _buildSwitchTile(
-                  'WiFi Only Downloads',
-                  'Download content only over WiFi',
-                  Icons.wifi_outlined,
-                  _downloadOverWifiOnly,
-                  (value) => setState(() => _downloadOverWifiOnly = value),
-                ),
-                _buildDropdownTile(
-                  'Video Quality',
-                  'Default video playback quality',
-                  Icons.hd_outlined,
-                  _selectedQuality,
-                  ['SD', 'HD', 'Full HD'],
-                  (value) => setState(() => _selectedQuality = value!),
-                ),
-              ],
-            ),
 
-            _buildSettingsSection(
-              'Storage',
-              [
-                _buildActionTile(
-                  'Downloaded Content',
-                  'Manage offline downloads',
-                  Icons.download_outlined,
-                  () => _showDownloadsManager(),
+                _buildSettingsSection(
+                  'Video Settings',
+                  [
+                    _buildSwitchTile(
+                      'Auto Play',
+                      'Automatically play next lesson',
+                      Icons.play_arrow_outlined,
+                      _autoPlayEnabled,
+                      (value) => setState(() => _autoPlayEnabled = value),
+                    ),
+                    _buildSwitchTile(
+                      'WiFi Only Downloads',
+                      'Download content only over WiFi',
+                      Icons.wifi_outlined,
+                      _downloadOverWifiOnly,
+                      (value) => setState(() => _downloadOverWifiOnly = value),
+                    ),
+                    _buildDropdownTile(
+                      'Video Quality',
+                      'Default video playback quality',
+                      Icons.hd_outlined,
+                      _selectedQuality,
+                      ['SD', 'HD', 'Full HD'],
+                      (value) => setState(() => _selectedQuality = value!),
+                    ),
+                  ],
                 ),
-                _buildActionTile(
-                  'Clear Cache',
-                  'Free up storage space',
-                  Icons.clear_all_outlined,
-                  () => _clearCache(),
-                ),
-              ],
-            ),
 
-            _buildSettingsSection(
-              'About',
-              [
-                _buildActionTile(
-                  'Help & Support',
-                  'Get help and contact support',
-                  Icons.help_outline,
-                  () => _showHelp(),
+                _buildSettingsSection(
+                  'Storage',
+                  [
+                    _buildActionTile(
+                      'Downloaded Content',
+                      'Manage offline downloads',
+                      Icons.download_outlined,
+                      () => _showDownloadsManager(),
+                    ),
+                    _buildActionTile(
+                      'Clear Cache',
+                      'Free up storage space',
+                      Icons.clear_all_outlined,
+                      () => _clearCache(),
+                    ),
+                  ],
                 ),
-                _buildActionTile(
-                  'Privacy Policy',
-                  'View our privacy policy',
-                  Icons.privacy_tip_outlined,
-                  () => _showPrivacyPolicy(),
-                ),
-                _buildActionTile(
-                  'Terms of Service',
-                  'View terms and conditions',
-                  Icons.description_outlined,
-                  () => _showTerms(),
-                ),
-                _buildActionTile(
-                  'About App',
-                  'Version 1.0.0',
-                  Icons.info_outline,
-                  () => _showAbout(),
-                ),
-              ],
-            ),
 
-            // Sign Out Button
-            Container(
-              margin: const EdgeInsets.all(16),
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _signOut,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[600],
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                _buildSettingsSection(
+                  'About',
+                  [
+                    _buildActionTile(
+                      'Help & Support',
+                      'Get help and contact support',
+                      Icons.help_outline,
+                      () => _showHelp(),
+                    ),
+                    _buildActionTile(
+                      'Privacy Policy',
+                      'View our privacy policy',
+                      Icons.privacy_tip_outlined,
+                      () => _showPrivacyPolicy(),
+                    ),
+                    _buildActionTile(
+                      'Terms of Service',
+                      'View terms and conditions',
+                      Icons.description_outlined,
+                      () => _showTerms(),
+                    ),
+                    _buildActionTile(
+                      'About App',
+                      'Version 1.0.0',
+                      Icons.info_outline,
+                      () => _showAbout(),
+                    ),
+                  ],
+                ),
+
+                // Sign Out Button
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _signOut,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[600],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Sign Out',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
-                child: Text(
-                  'Sign Out',
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+
+                const SizedBox(height: 32),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

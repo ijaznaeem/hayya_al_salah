@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/topic.dart';
+import '../services/favorites_service.dart';
 import 'video_player_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -14,6 +15,7 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   List<Lesson> _favoriteLessons = [];
   bool _isLoading = true;
+  final FavoritesService _favoritesService = FavoritesService.instance;
 
   @override
   void initState() {
@@ -21,27 +23,89 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     _loadFavorites();
   }
 
-  void _loadFavorites() {
-    // Simulate loading favorites from storage
-    Future.delayed(const Duration(seconds: 1), () {
+  void _loadFavorites() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final favorites = await _favoritesService.getFavorites();
       setState(() {
-        _favoriteLessons = _getSampleFavorites();
+        _favoriteLessons = favorites;
         _isLoading = false;
       });
-    });
+    } catch (e) {
+      setState(() {
+        _favoriteLessons = [];
+        _isLoading = false;
+      });
+    }
   }
 
-  void _removeFavorite(String lessonId) {
-    setState(() {
-      _favoriteLessons.removeWhere((lesson) => lesson.id == lessonId);
-    });
+  void _removeFavorite(String lessonId) async {
+    final success = await _favoritesService.removeFromFavorites(lessonId);
+    if (success) {
+      setState(() {
+        _favoriteLessons.removeWhere((lesson) => lesson.id == lessonId);
+      });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Removed from favorites'),
-        backgroundColor: Color(0xFF23514C),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Removed from favorites'),
+            backgroundColor: Color(0xFF23514C),
+          ),
+        );
+      }
+    }
+  }
+
+  void _clearAllFavorites() async {
+    // Show confirmation dialog
+    final shouldClear = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All Favorites'),
+        content: const Text(
+            'Are you sure you want to remove all lessons from favorites?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Clear All'),
+          ),
+        ],
       ),
     );
+
+    if (shouldClear == true) {
+      final success = await _favoritesService.clearFavorites();
+      if (success) {
+        setState(() {
+          _favoriteLessons.clear();
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('All favorites cleared'),
+              backgroundColor: Color(0xFF23514C),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh favorites when returning to this screen
+    _loadFavorites();
   }
 
   @override
@@ -307,48 +371,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  void _clearAllFavorites() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Clear All Favorites',
-            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-          ),
-          content: Text(
-            'Are you sure you want to remove all lessons from your favorites?',
-            style: GoogleFonts.inter(),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _favoriteLessons.clear();
-                });
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('All favorites cleared'),
-                    backgroundColor: Color(0xFF23514C),
-                  ),
-                );
-              },
-              child: const Text(
-                'Clear All',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _shareLesson(Lesson lesson) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -356,41 +378,5 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         backgroundColor: const Color(0xFF23514C),
       ),
     );
-  }
-
-  List<Lesson> _getSampleFavorites() {
-    return [
-      Lesson(
-        id: 'fav-1',
-        title: 'Introduction to Prayer',
-        description:
-            'Understanding the importance and significance of prayer in Islam',
-        videoUrl: 'https://sample-video-url.com/prayer1',
-        thumbnailUrl: '',
-        duration: '15:30',
-        lessonNumber: 1,
-        referenceFileUrl: 'https://sample-pdf.com/prayer-basics.pdf',
-      ),
-      Lesson(
-        id: 'fav-2',
-        title: 'Arabic Alphabet',
-        description: 'Learn the Arabic letters and their pronunciation',
-        videoUrl: 'https://sample-video-url.com/quran1',
-        thumbnailUrl: '',
-        duration: '20:15',
-        lessonNumber: 1,
-        referenceFileUrl: 'https://sample-pdf.com/arabic-alphabet.pdf',
-      ),
-      Lesson(
-        id: 'fav-3',
-        title: 'Life of Prophet Muhammad',
-        description: 'Early life and prophethood of Muhammad (PBUH)',
-        videoUrl: 'https://sample-video-url.com/history1',
-        thumbnailUrl: '',
-        duration: '25:30',
-        lessonNumber: 1,
-        referenceFileUrl: 'https://sample-pdf.com/prophet-biography.pdf',
-      ),
-    ];
   }
 }

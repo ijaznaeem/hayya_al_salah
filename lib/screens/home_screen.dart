@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../models/quran_verse.dart';
 import '../models/topic.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../services/islamic_calendar_service.dart';
 import '../services/quran_api_service.dart';
 import 'lesson_detail_screen.dart';
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,16 +21,20 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final QuranApiService _quranService = QuranApiService();
   final IslamicCalendarService _calendarService = IslamicCalendarService();
+  final ApiService _apiService = ApiService();
 
   QuranVerse? _currentVerse;
   bool _isLoadingVerse = true;
   Map<String, String> _currentDate = {};
+  List<Topic> _topics = [];
+  bool _isLoadingTopics = false;
 
   @override
   void initState() {
     super.initState();
     _loadCurrentDate();
     _loadRandomVerse();
+    _loadTopics();
   }
 
   void _loadCurrentDate() {
@@ -56,6 +64,54 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _loadTopics() async {
+    setState(() {
+      _isLoadingTopics = true;
+    });
+
+    try {
+      await _apiService.initialize();
+      final topics = await _apiService.getTopics();
+      setState(() {
+        _topics = topics.isNotEmpty ? topics : _getSampleTopics();
+        _isLoadingTopics = false;
+      });
+    } catch (e) {
+      setState(() {
+        _topics = _getSampleTopics(); // Fallback to sample data
+        _isLoadingTopics = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Failed to load topics, showing sample data')),
+      );
+    }
+  }
+
+  // Fallback sample topics if API fails
+  List<Topic> _getSampleTopics() {
+    return [
+      Topic(
+        id: '1',
+        title: 'Salah Lessons',
+        description: 'By Dr. Farhat Hashmi',
+        imageUrl: '',
+        lessonsCount: 80,
+        duration: '2 hours',
+        lessons: [],
+      ),
+      Topic(
+        id: '2',
+        title: 'Salah Guide',
+        description: 'Step by Step Salah guide',
+        imageUrl: '',
+        lessonsCount: 12,
+        duration: '3 hours',
+        lessons: [],
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,9 +123,26 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         backgroundColor: const Color(0xFF23514C),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadRandomVerse,
+          Consumer<AuthService>(
+            builder: (context, authService, child) {
+              return IconButton(
+                icon: Icon(
+                  authService.isLoggedIn ? Icons.account_circle : Icons.login,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  if (authService.isLoggedIn) {
+                    _showProfileDialog(context, authService);
+                  } else {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                    );
+                  }
+                },
+              );
+            },
           ),
         ],
       ),
@@ -77,6 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onRefresh: () async {
           _loadCurrentDate();
           await _loadRandomVerse();
+          await _loadTopics();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -100,54 +174,60 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDateBanner() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Container(
         width: double.infinity,
+        height: 180, // Increased height
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF23514C),
-              Color(0xFF4A7B74),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20), // More rounded corners
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
+          image: const DecorationImage(
+            image: AssetImage('assets/images/top-banner.png'),
+            fit: BoxFit.cover,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Text(
-              'Today',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                color: Colors.white70,
-                fontWeight: FontWeight.w500,
+            // Gradient overlay for better text readability
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Colors.transparent,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              _currentDate['gregorian'] ?? 'Loading...',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _currentDate['islamic'] ?? 'Loading...',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                color: Colors.white70,
+            // Text content aligned to top-left
+            Positioned(
+              top: 0,
+              left: 0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 2),
+                  Text(
+                    _currentDate['gregorian'] ?? 'Loading...',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _currentDate['islamic'] ?? 'Loading...',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -175,19 +255,34 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(
-                Icons.auto_stories,
-                color: Color(0xFF23514C),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.auto_stories,
+                    color: Color(0xFF23514C),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Verse from the Qur\'an',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF23514C),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Verse of the Day',
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF23514C),
+              // Refresh button moved here
+              IconButton(
+                icon: const Icon(
+                  Icons.refresh,
+                  color: Color(0xFF23514C),
                 ),
+                onPressed: _loadRandomVerse,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
             ],
           ),
@@ -297,17 +392,23 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 200,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _sampleTopics
-                    .map((topic) => _buildTopicCard(topic))
-                    .toList(),
-              ),
-            ),
-          ),
+          _isLoadingTopics
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF23514C),
+                  ),
+                )
+              : SizedBox(
+                  height: 220, // Reduced height from 250 to 220
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _topics
+                          .map((topic) => _buildTopicCard(topic))
+                          .toList(),
+                    ),
+                  ),
+                ),
         ],
       ),
     );
@@ -315,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTopicCard(Topic topic) {
     return Container(
-      width: 160,
+      width: 180, // Increased width for better text layout
       margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -358,30 +459,45 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    topic.title,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+            Expanded(
+              // Use Expanded to prevent overflow
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      topic.title,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${topic.lessonsCount} lessons',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                    const SizedBox(height: 6),
+                    Text(
+                      topic.description,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        height: 1.3,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8), // Fixed spacing
+                    Text(
+                      '${topic.lessonsCount} lessons',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -390,34 +506,42 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Sample topics data
-  List<Topic> get _sampleTopics => [
-        Topic(
-          id: '1',
-          title: 'Prayer Basics',
-          description: 'Learn the fundamentals of Islamic prayer',
-          imageUrl: '',
-          lessonsCount: 8,
-          duration: '2 hours',
-          lessons: [],
+  void _showProfileDialog(BuildContext context, AuthService authService) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Profile',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
         ),
-        Topic(
-          id: '2',
-          title: 'Quran Recitation',
-          description: 'Master the art of Quranic recitation',
-          imageUrl: '',
-          lessonsCount: 12,
-          duration: '3 hours',
-          lessons: [],
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (authService.currentUser != null) ...[
+              Text(
+                  'Username: ${authService.currentUser!['username'] ?? 'N/A'}'),
+              Text('Email: ${authService.currentUser!['email'] ?? 'N/A'}'),
+            ],
+          ],
         ),
-        Topic(
-          id: '3',
-          title: 'Islamic History',
-          description: 'Explore the rich history of Islam',
-          imageUrl: '',
-          lessonsCount: 15,
-          duration: '4 hours',
-          lessons: [],
-        ),
-      ];
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await authService.logout();
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Logged out successfully')),
+              );
+            },
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+  }
 }
