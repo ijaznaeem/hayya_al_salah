@@ -1,0 +1,135 @@
+<div class="analytics-container">
+  <div class="header">
+    <h1>Analytics Dashboard</h1>
+    <button mat-raised-button color="primary" (click)="refreshAnalytics()">
+      <mat-icon>refresh</mat-icon>
+      Refresh Data
+    </button>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading analytics...</p>
+    </div>
+  } @else {
+    <!-- Key Metrics Cards -->
+    <div class="metrics-grid">
+      <mat-card class="metric-card">
+        <mat-card-content>
+          <div class="metric-content">
+            <mat-icon class="metric-icon users">people</mat-icon>
+            <div class="metric-info">
+              <h2>{{analytics.totalUsers}}</h2>
+              <p>Total Users</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-content>
+          <div class="metric-content">
+            <mat-icon class="metric-icon lectures">video_library</mat-icon>
+            <div class="metric-info">
+              <h2>{{analytics.totalLectures}}</h2>
+              <p>Total Lectures</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-content>
+          <div class="metric-content">
+            <mat-icon class="metric-icon topics">topic</mat-icon>
+            <div class="metric-info">
+              <h2>{{analytics.totalTopics}}</h2>
+              <p>Topics</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-content>
+          <div class="metric-content">
+            <mat-icon class="metric-icon views">visibility</mat-icon>
+            <div class="metric-info">
+              <h2>{{analytics.totalViews}}</h2>
+              <p>Total Views</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Charts and Details Row -->
+    <div class="charts-row">
+      <!-- Popular Lectures -->
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Popular Lectures</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (analytics.popularLectures.length > 0) {
+            <div class="popular-lectures">
+              @for (lecture of analytics.popularLectures; track lecture.title) {
+                <div class="lecture-item">
+                  <span class="lecture-title">{{lecture.title}}</span>
+                  <span class="lecture-views">{{lecture.views}} views</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="no-data">No data available</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Recent Activity -->
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Recent Activity</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (analytics.recentActivity.length > 0) {
+            <div class="activity-list">
+              @for (activity of analytics.recentActivity; track $index) {
+                <div class="activity-item">
+                  <mat-icon class="activity-icon">fiber_manual_record</mat-icon>
+                  <span class="activity-text">{{activity.action}}</span>
+                  <span class="activity-time">{{activity.timestamp | date:'short'}}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="no-data">No recent activity</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- User Growth Chart -->
+    <mat-card class="full-width-card">
+      <mat-card-header>
+        <mat-card-title>User Growth</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (analytics.userGrowth.length > 0) {
+          <div class="growth-chart">
+            @for (month of analytics.userGrowth; track month.month) {
+              <div class="growth-item">
+                <div class="growth-bar" [style.height.px]="month.users"></div>
+                <span class="growth-label">{{month.month}}</span>
+                <span class="growth-value">{{month.users}}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="no-data">No growth data available</p>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

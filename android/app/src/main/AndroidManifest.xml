@@ -1,22 +1,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.pakperegrine.hayya_al_salah">
+    
+    <!-- 16 KB Page Size Support Declaration -->
+    <uses-feature
+        android:name="android.hardware.ram"
+        android:required="false" />
+    
     <!-- Required Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
-    
-    <!-- Media Permissions for Android 14+ -->
-    <!-- <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> -->
-
-    <!-- <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" /> -->
-    <!-- Optional: For backward compatibility (below Android 10) -->
-    <!-- <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" /> -->
     <application
         android:label="Hayya Alal Salah"
-        android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
-        android:networkSecurityConfig="@xml/network_security_config">
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:largeHeap="true"
+        android:hardwareAccelerated="true"
+        android:supportsRtl="true">
+        
+        <!-- 16 KB Page Size Support Metadata -->
+        <meta-data
+            android:name="android.max_aspect"
+            android:value="2.4" />
+        <meta-data
+            android:name="android.allow_multiple_resumed_activities"
+            android:value="true" />
+        
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,0 +1,234 @@
+<div class="lectures-container">
+  <div class="header">
+    <h1>Lectures Management</h1>
+    <button mat-raised-button color="primary" (click)="showAddForm()" *ngIf="!showForm">
+      <mat-icon>add</mat-icon>
+      Add New Lecture
+    </button>
+  </div>
+
+  @if (showForm) {
+    <mat-card class="form-card">
+      <mat-card-header>
+        <mat-card-title>{{ editingLecture ? 'Edit' : 'Add New' }} Lecture</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="lectureForm" (ngSubmit)="saveLecture()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Title</mat-label>
+            <input matInput formControlName="title" required>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <textarea matInput formControlName="description" rows="3" required></textarea>
+          </mat-form-field>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>Lesson Number</mat-label>
+              <input matInput type="number" formControlName="lesson_number" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>Topic</mat-label>
+              <mat-select formControlName="topic_id" required>
+                @for (topic of topics; track topic.id) {
+                  <mat-option [value]="topic.id">{{topic.title}}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Duration (optional)</mat-label>
+            <input matInput type="number" formControlName="duration" min="0" 
+                   placeholder="Enter duration in seconds (optional)">
+            <mat-hint>Leave as 0 for automatic duration calculation after video processing</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Video URL</mat-label>
+            <input matInput formControlName="video_url" required>
+          </mat-form-field>
+
+          <!-- Video Upload Section -->
+          <div class="upload-section">
+            <h4>Video Upload</h4>
+            <div class="upload-controls">
+              <input #videoFileInput type="file" accept="video/*" (change)="onVideoFileSelected($event)" style="display: none;">
+              <button type="button" mat-raised-button color="primary"
+                      (click)="videoFileInput.click()"
+                      [disabled]="videoUploading">
+                <mat-icon>{{videoUploading ? 'upload' : 'video_library'}}</mat-icon>
+                {{videoUploading ? 'Uploading...' : 'Upload Video'}}
+              </button>
+              @if (videoUploading) {
+                <div class="upload-progress">
+                  <mat-progress-bar mode="determinate" [value]="videoUploadProgress"></mat-progress-bar>
+                  <span class="progress-text">{{videoUploadProgress}}%</span>
+                </div>
+              }
+              @if (lectureForm.get('video_url')?.value && !videoUploading) {
+                <div class="file-info">
+                  <mat-icon>video_file</mat-icon>
+                  <span>{{getVideoFileName()}}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Thumbnail Upload Section -->
+          <div class="upload-section">
+            <h4>Thumbnail (Optional)</h4>
+            <div class="upload-controls">
+              <input #imageFileInput type="file" accept="image/*" (change)="onImageFileSelected($event)" style="display: none;">
+              <button type="button" mat-stroked-button
+                      (click)="imageFileInput.click()"
+                      [disabled]="imageUploading">
+                <mat-icon>{{imageUploading ? 'upload' : 'image'}}</mat-icon>
+                {{imageUploading ? 'Uploading...' : 'Upload Thumbnail'}}
+              </button>
+              @if (imageUploading) {
+                <div class="upload-progress">
+                  <mat-progress-bar mode="determinate" [value]="imageUploadProgress"></mat-progress-bar>
+                  <span class="progress-text">{{imageUploadProgress}}%</span>
+                </div>
+              }
+              @if (lectureForm.get('thumbnail_url')?.value && !imageUploading) {
+                <div class="file-info">
+                  <mat-icon>image</mat-icon>
+                  <span>{{getImageFileName()}}</span>
+                  <img [src]="lectureForm.get('thumbnail_url')?.value" alt="Thumbnail" class="thumbnail-preview">
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Document Upload Section -->
+          <div class="upload-section">
+            <h4>Reference Document (Optional)</h4>
+            <div class="upload-controls">
+              <input #documentFileInput type="file" accept=".pdf,.doc,.docx" (change)="onDocumentFileSelected($event)" style="display: none;">
+              <button type="button" mat-stroked-button
+                      (click)="documentFileInput.click()"
+                      [disabled]="documentUploading">
+                <mat-icon>{{documentUploading ? 'upload' : 'description'}}</mat-icon>
+                {{documentUploading ? 'Uploading...' : 'Upload Document'}}
+              </button>
+              @if (documentUploading) {
+                <div class="upload-progress">
+                  <mat-progress-bar mode="determinate" [value]="documentUploadProgress"></mat-progress-bar>
+                  <span class="progress-text">{{documentUploadProgress}}%</span>
+                </div>
+              }
+              @if (lectureForm.get('reference_url')?.value && !documentUploading) {
+                <div class="file-info">
+                  <mat-icon>attach_file</mat-icon>
+                  <span>{{getDocumentFileName()}}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button mat-button type="button" (click)="cancelForm()">Cancel</button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="!lectureForm.valid">
+              {{ editingLecture ? 'Update' : 'Create' }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <mat-card>
+    <mat-card-content>
+      @if (isLoading) {
+        <div class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>Loading lectures...</p>
+        </div>
+      } @else {
+        <div class="table-container">
+          <table mat-table [dataSource]="lectures" class="lectures-table">
+            <!-- ID Column -->
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef>ID</th>
+              <td mat-cell *matCellDef="let lecture">{{lecture.id}}</td>
+            </ng-container>
+
+            <!-- Title Column -->
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Title</th>
+              <td mat-cell *matCellDef="let lecture" class="title-cell">
+                <strong>{{lecture.title}}</strong>
+                @if (lecture.description) {
+                  <br><small class="description">{{lecture.description}}</small>
+                }
+              </td>
+            </ng-container>
+
+            <!-- Lesson Number Column -->
+            <ng-container matColumnDef="lesson_number">
+              <th mat-header-cell *matHeaderCellDef>Lesson #</th>
+              <td mat-cell *matCellDef="let lecture">{{lecture.lesson_number}}</td>
+            </ng-container>
+
+            <!-- Topic Column -->
+            <ng-container matColumnDef="topic_name">
+              <th mat-header-cell *matHeaderCellDef>Topic</th>
+              <td mat-cell *matCellDef="let lecture">{{lecture.topic_name || 'N/A'}}</td>
+            </ng-container>
+
+            <!-- Duration Column -->
+            <ng-container matColumnDef="duration">
+              <th mat-header-cell *matHeaderCellDef>Duration</th>
+              <td mat-cell *matCellDef="let lecture">{{formatDuration(lecture.duration)}}</td>
+            </ng-container>
+
+            <!-- Files Column -->
+            <ng-container matColumnDef="files">
+              <th mat-header-cell *matHeaderCellDef>Files</th>
+              <td mat-cell *matCellDef="let lecture">
+                <div class="file-indicators">
+                  <mat-icon *ngIf="lecture.video_url" matTooltip="Video" color="primary">play_circle</mat-icon>
+                  <mat-icon *ngIf="lecture.thumbnail_url" matTooltip="Thumbnail" color="accent">image</mat-icon>
+                  <mat-icon *ngIf="lecture.reference_url" matTooltip="Reference Document">description</mat-icon>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let lecture">
+                <button mat-icon-button color="primary" matTooltip="Edit" (click)="editLecture(lecture)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" matTooltip="Delete" (click)="deleteLecture(lecture)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+                <button mat-icon-button matTooltip="View Video" [disabled]="!lecture.video_url">
+                  <mat-icon>play_circle</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+
+        <mat-paginator
+          [length]="totalLectures"
+          [pageSize]="pageSize"
+          [pageIndex]="currentPage"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPageChange($event)"
+          showFirstLastButtons>
+        </mat-paginator>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

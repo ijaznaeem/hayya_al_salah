@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "angular-admin-panel"
+		},
+		{
+			"path": "backend"
+		}
+	],
+	"settings": {
+		"powershell.cwd": "angular-admin-panel"
+	}
+}

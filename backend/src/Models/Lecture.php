@@ -27,6 +27,16 @@ class Lecture
         ]);
     }
 
+    public function getAllForPagination(): array
+    {
+        $sql = "SELECT l.*, t.title as topic_title 
+                FROM lectures l 
+                LEFT JOIN topics t ON l.topic_id = t.id 
+                ORDER BY l.id ASC";
+        
+        return $this->db->fetchAll($sql);
+    }
+
     public function getById(int $id): ?array
     {
         $sql = "SELECT l.*, t.title as topic_title 

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Test - Absolute URL</title>
+</head>
+<body>
+    <h1>Upload Test - Absolute URL Demo</h1>
+
+    <h2>Before (Backend Response):</h2>
+    <pre>{
+  "success": true,
+  "url": "/uploads/videos/68d3d899a87a1_1758714009.mp4",
+  "filename": "68d3d899a87a1_1758714009.mp4",
+  "original_name": "converted.mp4",
+  "size": 38585692,
+  "type": "video/mp4"
+}</pre>
+
+    <h2>After (Angular API Service Processing):</h2>
+    <pre>{
+  "success": true,
+  "url": "http://localhost:8000/uploads/videos/68d3d899a87a1_1758714009.mp4",
+  "filename": "68d3d899a87a1_1758714009.mp4",
+  "original_name": "converted.mp4",
+  "size": 38585692,
+  "type": "video/mp4"
+}</pre>
+
+    <h2>How it works:</h2>
+    <p>The Angular API service now automatically converts relative URLs to absolute URLs by:</p>
+    <ol>
+        <li>Checking if the URL starts with 'http' (to avoid double-processing)</li>
+        <li>If not, prepending the baseUrl (http://localhost:8000) to the relative URL</li>
+        <li>Returning the modified response with the absolute URL</li>
+    </ol>
+
+    <h2>Benefits:</h2>
+    <ul>
+        <li>✅ Direct access to files via full URL</li>
+        <li>✅ Works correctly with different deployment environments</li>
+        <li>✅ No need to construct URLs in components</li>
+        <li>✅ Consistent URL format throughout the application</li>
+    </ul>
+
+    <p><strong>Test the upload:</strong> Go to the Angular admin panel, login, and upload a file. The form will now save the absolute URL.</p>
+</body>
+</html>

@@ -18,6 +18,9 @@ class TopicController extends BaseController
         try {
             $topics = $this->topicModel->getAll();
             
+            // Process URLs to absolute paths
+            $topics = $this->processTopicsUrls($topics);
+            
             $this->sendResponse([
                 'success' => true,
                 'data' => $topics,
@@ -39,6 +42,9 @@ class TopicController extends BaseController
             if (!$topic) {
                 $this->sendResponse(['error' => 'Topic not found'], 404);
             }
+
+            // Process URLs to absolute paths
+            $topic = $this->processTopicUrls($topic);
 
             $this->sendResponse([
                 'success' => true,
@@ -80,6 +86,9 @@ class TopicController extends BaseController
         try {
             $topicId = $this->topicModel->create($topicData);
             $topic = $this->topicModel->getById($topicId);
+
+            // Process URLs to absolute paths
+            $topic = $this->processTopicUrls($topic);
 
             $this->sendResponse([
                 'success' => true,
@@ -126,6 +135,10 @@ class TopicController extends BaseController
             
             if ($success) {
                 $topic = $this->topicModel->getById($id);
+                
+                // Process URLs to absolute paths
+                $topic = $this->processTopicUrls($topic);
+                
                 $this->sendResponse([
                     'success' => true,
                     'message' => 'Topic updated successfully',

@@ -1,8 +1,8 @@
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:video_player/video_player.dart';
 
-// import 'package:video_player/video_player.dart';
-// import 'package:chewie/chewie.dart';
 import '../models/topic.dart';
 import '../services/favorites_service.dart';
 
@@ -21,11 +21,67 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  // VideoPlayerController? _videoController;
-  // ChewieController? _chewieController;
+  VideoPlayerController? _videoController;
+  ChewieController? _chewieController;
   bool _isPlayerReady = false;
   bool _isFavorite = false;
   final FavoritesService _favoritesService = FavoritesService.instance;
+
+  /// Helper method to determine text direction based on content
+  TextDirection _getTextDirection(String text) {
+    if (text.isEmpty) return TextDirection.ltr;
+
+    // Check if text contains Arabic, Urdu, or other RTL characters
+    final rtlRegex = RegExp(
+        r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u200F\u202B\u202E]');
+    if (rtlRegex.hasMatch(text)) {
+      return TextDirection.rtl;
+    }
+    return TextDirection.ltr;
+  }
+
+  /// Create a text widget with proper Unicode support
+  Widget buildUnicodeText(
+    String text, {
+    TextStyle? style,
+    int? maxLines,
+    TextOverflow? overflow,
+    TextAlign? textAlign,
+  }) {
+    final isRtl = _getTextDirection(text) == TextDirection.rtl;
+
+    // Define fallback fonts for different scripts
+    List<String> fontFallbacks = [
+      if (isRtl) ...[
+        'Noto Sans Arabic',
+        'Noto Nastaliq Urdu',
+        'Arabic Typesetting',
+        'Traditional Arabic',
+        'Segoe UI Historic',
+      ],
+      'Roboto',
+      'Arial',
+      'sans-serif',
+    ];
+
+    return Directionality(
+      textDirection: _getTextDirection(text),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamilyFallback: fontFallbacks,
+          fontSize: style?.fontSize ?? 16,
+          fontWeight: style?.fontWeight,
+          color: style?.color ?? Colors.black87,
+          height: style?.height ?? (isRtl ? 1.8 : 1.5),
+        ),
+        maxLines: maxLines,
+        overflow: overflow,
+        textAlign: textAlign ?? (isRtl ? TextAlign.right : TextAlign.left),
+        textDirection: _getTextDirection(text),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -85,36 +141,101 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
   }
 
-  void _initializePlayer() {
-    // For now, we'll simulate video player initialization
-    // In a real app, you would initialize the video player here
-    setState(() {
-      _isPlayerReady = true;
-    });
+  void _initializePlayer() async {
+    try {
+      // Initialize video player with the lesson's video URL
+      print('Initializing video: ${widget.lesson.videoUrl}');
 
-    // Uncomment when video_player is available:
-    // _videoController = VideoPlayerController.network(widget.lesson.videoUrl)
-    //   ..initialize().then((_) {
-    //     _chewieController = ChewieController(
-    //       videoPlayerController: _videoController!,
-    //       autoPlay: true,
-    //       looping: false,
-    //       materialProgressColors: ChewieProgressColors(
-    //         playedColor: const Color(0xFF23514C),
-    //         handleColor: const Color(0xFF23514C),
-    //         backgroundColor: Colors.grey,
-    //       ),
-    //     );
-    //     setState(() {
-    //       _isPlayerReady = true;
-    //     });
-    //   });
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.lesson.videoUrl),
+        httpHeaders: {
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+      );
+
+      await _videoController!.initialize();
+
+      _chewieController = ChewieController(
+        videoPlayerController: _videoController!,
+        autoPlay: false,
+        looping: false,
+        aspectRatio: _videoController!.value.aspectRatio,
+        materialProgressColors: ChewieProgressColors(
+          playedColor: const Color(0xFF23514C),
+          handleColor: const Color(0xFF23514C),
+          backgroundColor: Colors.grey,
+          bufferedColor: Colors.grey[300]!,
+        ),
+        placeholder: Container(
+          color: Colors.black,
+          child: const Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFF23514C),
+            ),
+          ),
+        ),
+        errorBuilder: (context, errorMessage) {
+          return Container(
+            color: Colors.black,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.white,
+                    size: 64,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading video',
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    errorMessage,
+                    style: GoogleFonts.inter(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _isPlayerReady = true;
+        });
+      }
+    } catch (error) {
+      print('Video initialization error: $error');
+      if (mounted) {
+        setState(() {
+          _isPlayerReady = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load video: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
   void dispose() {
-    // _chewieController?.dispose();
-    // _videoController?.dispose();
+    _chewieController?.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -125,11 +246,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
+        title: buildUnicodeText(
           widget.lesson.title,
-          style: GoogleFonts.inter(
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,
+            fontSize: 18,
           ),
         ),
         actions: [
@@ -189,40 +311,41 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Widget _buildVideoPlayer() {
-    // For demo purposes, show a placeholder
-    // In a real app, return Chewie(controller: _chewieController!)
-    return Container(
-      color: Colors.black,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.play_circle_outline,
-              size: 80,
-              color: Colors.white,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Video Player',
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+    if (_chewieController != null && _videoController!.value.isInitialized) {
+      return Chewie(controller: _chewieController!);
+    } else {
+      // Show loading or error state
+      return Container(
+        color: Colors.black,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(
+                color: Color(0xFF23514C),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Duration: ${widget.lesson.duration}',
-              style: GoogleFonts.inter(
-                color: Colors.white70,
-                fontSize: 14,
+              const SizedBox(height: 16),
+              Text(
+                'Loading video...',
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                'Duration: ${widget.lesson.duration}',
+                style: GoogleFonts.inter(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildLessonInfo() {
@@ -233,9 +356,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Lesson Title
-          Text(
+          buildUnicodeText(
             widget.lesson.title,
-            style: GoogleFonts.inter(
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -244,9 +367,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           const SizedBox(height: 8),
 
           // Lesson Description
-          Text(
+          buildUnicodeText(
             widget.lesson.description,
-            style: GoogleFonts.inter(
+            style: TextStyle(
               fontSize: 16,
               color: Colors.grey[700],
               height: 1.5,
@@ -326,13 +449,20 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Widget _buildRelatedLessons() {
+    // Filter related lessons to only show those with the same lesson number
+    final filteredLessons = widget.relatedLessons
+        .where((lesson) =>
+            lesson.id != widget.lesson.id &&
+            lesson.lessonNumber == widget.lesson.lessonNumber)
+        .toList();
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Related Lessons',
+            'Related Lessons (Lesson ${widget.lesson.lessonNumber})',
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -341,17 +471,25 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: ListView.builder(
-              itemCount: widget.relatedLessons.length
-                  .clamp(0, 5), // Show max 5 related lessons
-              itemBuilder: (context, index) {
-                final lesson = widget.relatedLessons[index];
-                if (lesson.id == widget.lesson.id) {
-                  return const SizedBox.shrink();
-                }
-                return _buildRelatedLessonCard(lesson);
-              },
-            ),
+            child: filteredLessons.isEmpty
+                ? Center(
+                    child: Text(
+                      'No other lessons found for lesson ${widget.lesson.lessonNumber}',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: filteredLessons.length
+                        .clamp(0, 5), // Show max 5 related lessons
+                    itemBuilder: (context, index) {
+                      final lesson = filteredLessons[index];
+                      return _buildRelatedLessonCard(lesson);
+                    },
+                  ),
           ),
         ],
       ),
@@ -405,9 +543,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    buildUnicodeText(
                       lesson.title,
-                      style: GoogleFonts.inter(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,

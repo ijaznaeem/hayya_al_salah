@@ -22,6 +22,9 @@ class LectureController extends BaseController
         try {
             if (!empty($search)) {
                 $lectures = $this->lectureModel->search($search);
+                // Process URLs to absolute paths
+                $lectures = $this->processLecturesUrls($lectures);
+                
                 $this->sendResponse([
                     'success' => true,
                     'data' => $lectures,
@@ -29,10 +32,13 @@ class LectureController extends BaseController
                     'search_query' => $search
                 ]);
             } else {
-                $offset = ($page - 1) * $perPage;
-                $lectures = $this->lectureModel->getAll($perPage, $offset);
+                // Get all lectures for pagination (we'll optimize this later if needed)
+                $allLectures = $this->lectureModel->getAllForPagination();
                 
-                $response = $this->paginateResults($lectures, $page, $perPage);
+                // Process URLs to absolute paths
+                $allLectures = $this->processLecturesUrls($allLectures);
+                
+                $response = $this->paginateResults($allLectures, $page, $perPage);
                 $response['success'] = true;
                 
                 $this->sendResponse($response);
@@ -54,6 +60,14 @@ class LectureController extends BaseController
                 $this->sendResponse(['error' => 'Lecture not found'], 404);
             }
 
+            // Process URLs to absolute paths
+            $lecture = $this->processLectureUrls($lecture);
+            
+            // Process related lessons URLs too
+            if (isset($lecture['related_lessons'])) {
+                $lecture['related_lessons'] = $this->processLecturesUrls($lecture['related_lessons']);
+            }
+
             $this->sendResponse([
                 'success' => true,
                 'data' => $lecture
@@ -68,15 +82,31 @@ class LectureController extends BaseController
 
     public function byTopic(int $topicId): void
     {
+        $page = (int) ($_GET['page'] ?? 1);
+        $perPage = (int) ($_GET['per_page'] ?? 20);
+
         try {
             $lectures = $this->lectureModel->getByTopicId($topicId);
             
-            $this->sendResponse([
-                'success' => true,
-                'data' => $lectures,
-                'count' => count($lectures),
-                'topic_id' => $topicId
-            ]);
+            // Process URLs to absolute paths
+            $lectures = $this->processLecturesUrls($lectures);
+            
+            if (!empty($_GET['page']) || !empty($_GET['per_page'])) {
+                // Apply pagination if requested
+                $response = $this->paginateResults($lectures, $page, $perPage);
+                $response['success'] = true;
+                $response['topic_id'] = $topicId;
+                
+                $this->sendResponse($response);
+            } else {
+                // Return all results without pagination (for backward compatibility)
+                $this->sendResponse([
+                    'success' => true,
+                    'data' => $lectures,
+                    'count' => count($lectures),
+                    'topic_id' => $topicId
+                ]);
+            }
         } catch (\Exception $e) {
             $this->sendResponse([
                 'error' => 'Failed to fetch lectures',
@@ -123,6 +153,9 @@ class LectureController extends BaseController
         try {
             $lectureId = $this->lectureModel->create($lectureData);
             $lecture = $this->lectureModel->getById($lectureId);
+            
+            // Process URLs to absolute paths
+            $lecture = $this->processLectureUrls($lecture);
 
             $this->sendResponse([
                 'success' => true,
@@ -181,6 +214,10 @@ class LectureController extends BaseController
             
             if ($success) {
                 $lecture = $this->lectureModel->getById($id);
+                
+                // Process URLs to absolute paths
+                $lecture = $this->processLectureUrls($lecture);
+                
                 $this->sendResponse([
                     'success' => true,
                     'message' => 'Lecture updated successfully',
@@ -234,6 +271,9 @@ class LectureController extends BaseController
         try {
             $lectures = $this->lectureModel->getPopular($limit);
             
+            // Process URLs to absolute paths
+            $lectures = $this->processLecturesUrls($lectures);
+            
             $this->sendResponse([
                 'success' => true,
                 'data' => $lectures,
@@ -253,6 +293,9 @@ class LectureController extends BaseController
 
         try {
             $lectures = $this->lectureModel->getRecent($limit);
+            
+            // Process URLs to absolute paths
+            $lectures = $this->processLecturesUrls($lectures);
             
             $this->sendResponse([
                 'success' => true,

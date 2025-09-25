@@ -1,0 +1,185 @@
+.lectures-container {
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.form-card {
+  margin-bottom: 2rem;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.half-width {
+  flex: 1;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 1rem;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.lectures-table {
+  width: 100%;
+}
+
+.title-cell {
+  max-width: 200px;
+}
+
+.description {
+  color: #666;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.file-indicators {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.file-indicators mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+mat-paginator {
+  margin-top: 16px;
+}
+
+.mat-mdc-row:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .half-width {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Upload Section Styles */
+.upload-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+}
+
+.upload-section h4 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.upload-progress mat-progress-bar {
+  flex: 1;
+}
+
+.progress-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1976d2;
+  min-width: 40px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #e8f5e8;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.file-info mat-icon {
+  color: #4caf50;
+}
+
+.file-info span {
+  font-size: 0.875rem;
+  color: #333;
+}
+
+.thumbnail-preview {
+  max-width: 100px;
+  max-height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  margin-left: auto;
+}
+
+/* Responsive upload sections */
+@media (max-width: 768px) {
+  .upload-section {
+    margin: 1rem 0;
+    padding: 0.75rem;
+  }
+
+  .upload-progress {
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: stretch;
+  }
+
+  .progress-text {
+    text-align: center;
+    min-width: auto;
+  }
+}

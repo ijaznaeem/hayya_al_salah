@@ -37,6 +37,18 @@ class Router
         $this->routes['PUT']['/lectures/(\d+)'] = 'Controllers\LectureController@update';
         $this->routes['DELETE']['/lectures/(\d+)'] = 'Controllers\LectureController@delete';
 
+        // Notifications routes - specific routes first, then patterns
+        $this->routes['GET']['/notifications'] = 'Controllers\NotificationController@index';
+        $this->routes['GET']['/notifications/recent'] = 'Controllers\NotificationController@recent';
+        $this->routes['GET']['/notifications/stats'] = 'Controllers\NotificationController@stats';
+        $this->routes['GET']['/notifications/unread/count'] = 'Controllers\NotificationController@unreadCount';
+        $this->routes['PUT']['/notifications/read/all'] = 'Controllers\NotificationController@markAllAsRead';
+        $this->routes['GET']['/notifications/([a-f0-9\-]+)'] = 'Controllers\NotificationController@show';
+        $this->routes['PUT']['/notifications/([a-f0-9\-]+)/read'] = 'Controllers\NotificationController@markAsRead';
+        $this->routes['POST']['/notifications'] = 'Controllers\NotificationController@store';
+        $this->routes['PUT']['/notifications/([a-f0-9\-]+)'] = 'Controllers\NotificationController@update';
+        $this->routes['DELETE']['/notifications/([a-f0-9\-]+)'] = 'Controllers\NotificationController@delete';
+
         // User favorites routes (requires auth)
         $this->routes['GET']['/user/favorites'] = 'Controllers\FavoriteController@index';
         $this->routes['GET']['/user/favorites/ids'] = 'Controllers\FavoriteController@getFavoriteIds';
@@ -64,6 +76,11 @@ class Router
         $this->routes['DELETE']['/admin/users/(\d+)'] = 'Controllers\AdminController@deleteUser';
         $this->routes['GET']['/admin/users/recent'] = 'Controllers\AdminController@getRecentUsers';
         $this->routes['GET']['/admin/users/activity'] = 'Controllers\AdminController@getUserActivity';
+
+        // Video duration processing routes (admin only)
+        $this->routes['GET']['/admin/videos/duration/status'] = 'Controllers\VideoDurationController@status';
+        $this->routes['POST']['/admin/videos/duration/process'] = 'Controllers\VideoDurationController@process';
+        $this->routes['POST']['/admin/videos/duration/set'] = 'Controllers\VideoDurationController@setDuration';
 
         // Alias for backward compatibility (admin panel expects /users endpoint)
         $this->routes['GET']['/users'] = 'Controllers\AdminController@getUsers';

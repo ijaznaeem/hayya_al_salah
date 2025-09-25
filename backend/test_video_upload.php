@@ -1,8 +1,8 @@
 <?php
 
-echo "=== Video Upload Test - Lesson1C.mp4 ===\n\n";
+echo "=== Video Upload Test - converted.mp4 ===\n\n";
 
-$videoFile = __DIR__ . '/Lesson1C.mp4';
+$videoFile = "C:\\Users\\naeem\\Downloads\\converted.mp4";
 
 // Check if video file exists
 if (!file_exists($videoFile)) {

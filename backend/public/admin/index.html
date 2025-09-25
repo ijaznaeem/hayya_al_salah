@@ -60,6 +60,10 @@
                     <i class="fas fa-video"></i>
                     <span>Lectures</span>
                 </a>
+                <a href="#video-processing" class="nav-item" data-section="video-processing">
+                    <i class="fas fa-cogs"></i>
+                    <span>Video Processing</span>
+                </a>
                 <a href="#analytics" class="nav-item" data-section="analytics">
                     <i class="fas fa-chart-bar"></i>
                     <span>Analytics</span>
@@ -156,6 +160,12 @@
                         Add User
                     </button>
                 </div>
+                <div class="filters">
+                    <input type="text" id="searchUsers" placeholder="Search users...">
+                    <div class="pagination-info">
+                        <span id="usersCount">0 users</span>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
@@ -173,6 +183,39 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        <span id="usersPaginationInfo">Showing 0-0 of 0 users</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button id="usersFirstPage" class="btn btn-secondary" disabled>
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button id="usersPrevPage" class="btn btn-secondary" disabled>
+                            <i class="fas fa-angle-left"></i>
+                            Previous
+                        </button>
+                        <div class="pagination-pages" id="usersPaginationPages">
+                            <!-- Page numbers will be generated here -->
+                        </div>
+                        <button id="usersNextPage" class="btn btn-secondary" disabled>
+                            Next
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button id="usersLastPage" class="btn btn-secondary" disabled>
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
+                    <div class="pagination-size">
+                        <label for="usersPerPage">Items per page:</label>
+                        <select id="usersPerPage">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
             </section>
 
             <!-- Topics Section -->
@@ -183,6 +226,12 @@
                         <i class="fas fa-plus"></i>
                         Add Topic
                     </button>
+                </div>
+                <div class="filters">
+                    <input type="text" id="searchTopics" placeholder="Search topics...">
+                    <div class="pagination-info">
+                        <span id="topicsCount">0 topics</span>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table class="data-table">
@@ -201,6 +250,39 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        <span id="topicsPaginationInfo">Showing 0-0 of 0 topics</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button id="topicsFirstPage" class="btn btn-secondary" disabled>
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button id="topicsPrevPage" class="btn btn-secondary" disabled>
+                            <i class="fas fa-angle-left"></i>
+                            Previous
+                        </button>
+                        <div class="pagination-pages" id="topicsPaginationPages">
+                            <!-- Page numbers will be generated here -->
+                        </div>
+                        <button id="topicsNextPage" class="btn btn-secondary" disabled>
+                            Next
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button id="topicsLastPage" class="btn btn-secondary" disabled>
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
+                    <div class="pagination-size">
+                        <label for="topicsPerPage">Items per page:</label>
+                        <select id="topicsPerPage">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
             </section>
 
             <!-- Lectures Section -->
@@ -217,6 +299,9 @@
                         <option value="">All Topics</option>
                     </select>
                     <input type="text" id="searchLectures" placeholder="Search lectures...">
+                    <div class="pagination-info">
+                        <span id="lecturesCount">0 lectures</span>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table class="data-table">
@@ -235,6 +320,133 @@
                             <!-- Lectures will be loaded here -->
                         </tbody>
                     </table>
+                </div>
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        <span id="lecturesPaginationInfo">Showing 0-0 of 0 lectures</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button id="lecturesFirstPage" class="btn btn-secondary" disabled>
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button id="lecturesPrevPage" class="btn btn-secondary" disabled>
+                            <i class="fas fa-angle-left"></i>
+                            Previous
+                        </button>
+                        <div class="pagination-pages" id="lecturesPaginationPages">
+                            <!-- Page numbers will be generated here -->
+                        </div>
+                        <button id="lecturesNextPage" class="btn btn-secondary" disabled>
+                            Next
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button id="lecturesLastPage" class="btn btn-secondary" disabled>
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
+                    <div class="pagination-size">
+                        <label for="lecturesPerPage">Items per page:</label>
+                        <select id="lecturesPerPage">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Video Processing Section -->
+            <section id="video-processing-section" class="content-section">
+                <div class="section-header">
+                    <h2>Video Duration Processing</h2>
+                    <p>Automatically analyze and update video durations using FFmpeg</p>
+                </div>
+                
+                <div class="video-processing-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalVideos">0</h3>
+                            <p>Total Videos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="videosWithDuration">0</h3>
+                            <p>With Duration</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="videosNeedProcessing">0</h3>
+                            <p>Need Processing</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="ffmpegStatus">Unknown</h3>
+                            <p>FFmpeg Status</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-processing-controls">
+                    <div class="control-group">
+                        <h3>Processing Options</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="processingLimit">Limit (0 = all)</label>
+                                <input type="number" id="processingLimit" value="10" min="0" max="1000">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="dryRunMode" checked>
+                                    Dry Run (preview only)
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="forceMode">
+                                    Force (reprocess all)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="button-group">
+                            <button id="startProcessingBtn" class="btn btn-primary">
+                                <i class="fas fa-play"></i>
+                                Start Processing
+                            </button>
+                            <button id="refreshStatusBtn" class="btn btn-secondary">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh Status
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="processingResults" class="processing-results" style="display: none;">
+                    <h3>Processing Results</h3>
+                    <div id="processingLog" class="processing-log"></div>
+                    <div id="processingSummary" class="processing-summary"></div>
+                </div>
+
+                <div id="processingProgress" class="processing-progress" style="display: none;">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <div id="progressText" class="progress-text">Processing videos...</div>
                 </div>
             </section>
 

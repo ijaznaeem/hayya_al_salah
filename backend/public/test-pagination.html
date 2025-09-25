@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagination Test</title>
+</head>
+<body>
+    <h1>Admin Panel Pagination Test</h1>
+    <p>This page will test the pagination functionality.</p>
+    
+    <div id="test-results"></div>
+    
+    <script>
+        // Simple test to check if pagination elements exist
+        function testPaginationElements() {
+            const elements = [
+                'lecturesPerPage',
+                'lecturesFirstPage', 
+                'lecturesPrevPage',
+                'lecturesNextPage',
+                'lecturesLastPage',
+                'lecturesPaginationPages'
+            ];
+            
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h2>Testing pagination elements:</h2>';
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                const status = element ? '✅ Found' : '❌ Not found';
+                results.innerHTML += `<p>${id}: ${status}</p>`;
+            });
+        }
+        
+        // Test when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(testPaginationElements, 1000);
+        });
+    </script>
+    
+    <!-- Include the admin panel HTML for testing -->
+    <iframe src="/admin/" width="100%" height="600px" style="border: 1px solid #ccc; margin-top: 20px;"></iframe>
+</body>
+</html>

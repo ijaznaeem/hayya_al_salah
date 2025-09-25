@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../services/auth_service.dart';
 import '../services/theme_service.dart';
+import 'privacy_policy_screen.dart';
 
 class ManageScreen extends StatefulWidget {
   const ManageScreen({super.key});
@@ -141,28 +143,36 @@ class _ManageScreenState extends State<ManageScreen> {
                   ],
                 ),
 
-                // Sign Out Button
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _signOut,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red[600],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                // Sign Out Button (only show if logged in)
+                Consumer<AuthService>(
+                  builder: (context, authService, child) {
+                    if (!authService.isLoggedIn) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.all(16),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _signOut,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[600],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          'Sign Out',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      'Sign Out',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 32),
@@ -175,79 +185,91 @@ class _ManageScreenState extends State<ManageScreen> {
   }
 
   Widget _buildProfileSection() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Profile Picture
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF1B5E20),
-                  Color(0xFF23514C),
-                ],
+    return Consumer<AuthService>(
+      builder: (context, authService, child) {
+        final user = authService.currentUser;
+        final isLoggedIn = authService.isLoggedIn;
+
+        return Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: const Icon(
-              Icons.person,
-              size: 30,
-              color: Colors.white,
-            ),
+            ],
           ),
-
-          const SizedBox(width: 16),
-
-          // User Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome, Student',
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+          child: Row(
+            children: [
+              // Profile Picture
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF1B5E20),
+                      Color(0xFF23514C),
+                    ],
                   ),
+                  borderRadius: BorderRadius.circular(30),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Continue your Islamic learning journey',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                child: const Icon(
+                  Icons.person,
+                  size: 30,
+                  color: Colors.white,
                 ),
-              ],
-            ),
-          ),
+              ),
 
-          // Edit Button
-          IconButton(
-            onPressed: _editProfile,
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Edit Profile',
+              const SizedBox(width: 16),
+
+              // User Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isLoggedIn
+                          ? 'Welcome, ${user?['username'] ?? 'Student'}'
+                          : 'Welcome, Guest',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isLoggedIn
+                          ? (user?['email'] ??
+                              'Continue your Islamic learning journey')
+                          : 'Sign in to access all features',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Edit Button
+              IconButton(
+                onPressed: _editProfile,
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Edit Profile',
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -471,12 +493,7 @@ class _ManageScreenState extends State<ManageScreen> {
   }
 
   void _showPrivacyPolicy() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Privacy Policy page coming soon!'),
-        backgroundColor: Color(0xFF23514C),
-      ),
-    );
+    PrivacyPolicyScreen.show(context);
   }
 
   void _showTerms() {
@@ -517,14 +534,21 @@ class _ManageScreenState extends State<ManageScreen> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Signed out successfully!'),
-                  backgroundColor: Color(0xFF23514C),
-                ),
-              );
+            onPressed: () async {
+              // Use AuthService to logout
+              final authService =
+                  Provider.of<AuthService>(context, listen: false);
+              await authService.logout();
+
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Signed out successfully!'),
+                    backgroundColor: Color(0xFF23514C),
+                  ),
+                );
+              }
             },
             child: const Text(
               'Sign Out',

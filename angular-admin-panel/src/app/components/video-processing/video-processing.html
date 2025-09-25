@@ -1,0 +1,184 @@
+<div class="video-processing-container">
+  <h1>Video Processing</h1>
+  
+  <div class="cards-container">
+    <!-- System Information Card -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>System Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="system-info">
+          <div class="info-item">
+            <mat-icon [class]="status.ffmpeg_available ? 'success-icon' : 'warning-icon'">
+              {{ status.ffmpeg_available ? 'check_circle' : 'warning' }}
+            </mat-icon>
+            <span>FFmpeg: {{ status.ffmpeg_available ? 'Available' : 'Not Available' }}</span>
+          </div>
+          
+          @if (!status.ffmpeg_available && status.alternative_methods) {
+            <div class="info-item">
+              <mat-icon class="info-icon">info</mat-icon>
+              <span>Using alternative methods for duration processing</span>
+            </div>
+          }
+          
+          @if (status.note) {
+            <div class="note">
+              <mat-icon class="info-icon">lightbulb</mat-icon>
+              <span>{{ status.note }}</span>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Statistics Card -->
+    <mat-card class="stats-card">
+      <mat-card-header>
+        <mat-card-title>Video Statistics</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number">{{ status.total_videos || 0 }}</div>
+            <div class="stat-label">Total Videos</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ status.with_duration || 0 }}</div>
+            <div class="stat-label">With Duration</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ status.needs_processing || 0 }}</div>
+            <div class="stat-label">Need Processing</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Status Card -->
+    <mat-card class="status-card">
+      <mat-card-header>
+        <mat-card-title>Processing Status</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="status-info">
+          <div class="status-badge" [class]="status.status">
+            {{status.status | titlecase}}
+          </div>
+          
+          @if (status.status === 'running') {
+            <div class="progress-section">
+              <p>Progress: {{status.processed}} / {{status.total}} videos</p>
+              <mat-progress-bar mode="determinate" [value]="progressPercentage"></mat-progress-bar>
+              <p class="progress-text">{{progressPercentage}}% complete</p>
+            </div>
+          }
+          
+          @if (status.status === 'completed') {
+            <div class="completion-info">
+              <p><mat-icon class="success-icon">check_circle</mat-icon> Processing completed</p>
+              <p>Processed {{status.processed}} videos</p>
+              @if (status.errors.length > 0) {
+                <p class="error-summary">{{status.errors.length}} errors encountered</p>
+              }
+            </div>
+          }
+          
+          @if (status.status === 'error') {
+            <div class="error-info">
+              <p><mat-icon class="error-icon">error</mat-icon> Processing failed</p>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Controls Card -->
+    <mat-card class="controls-card">
+      <mat-card-header>
+        <mat-card-title>Processing Controls</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (!status.ffmpeg_available) {
+          <div class="processing-info">
+            <mat-icon class="info-icon">info</mat-icon>
+            <p><strong>Alternative Processing Mode</strong></p>
+            <p>Since FFmpeg is not available, the system will use alternative methods to detect video durations:</p>
+            <ul>
+              <li>Parse duration from filenames (e.g., "video_5min30s.mp4")</li>
+              <li>Estimate from file size (rough approximation)</li>
+              <li>Manual duration entry in Lectures Management</li>
+            </ul>
+          </div>
+        }
+        
+        <div class="control-options">
+          <mat-checkbox [(ngModel)]="dryRun" [disabled]="isRunning">
+            Dry Run (preview only)
+          </mat-checkbox>
+          
+          <mat-checkbox [(ngModel)]="force" [disabled]="isRunning">
+            Force update (overwrite existing durations)
+          </mat-checkbox>
+        </div>
+        
+        <div class="action-buttons">
+          <button mat-raised-button color="primary" 
+                  (click)="startProcessing()" 
+                  [disabled]="isRunning">
+            <mat-icon>play_arrow</mat-icon>
+            @if (dryRun) {
+              Run Analysis
+            } @else {
+              Start Processing
+            }
+          </button>
+          
+          <button mat-raised-button (click)="checkStatus()">
+            <mat-icon>refresh</mat-icon>
+            Refresh Status
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Errors Card -->
+  @if (status.errors.length > 0) {
+    <mat-card class="errors-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon class="error-icon">warning</mat-icon>
+          Errors ({{status.errors.length}})
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="errors-list">
+          @for (error of status.errors; track $index) {
+            <div class="error-item">
+              <strong>{{error.file}}</strong>
+              <p>{{error.error}}</p>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Log Card -->
+  @if (status.log.length > 0) {
+    <mat-card class="log-card">
+      <mat-card-header>
+        <mat-card-title>Processing Log</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="log-container">
+          @for (logEntry of status.log; track $index) {
+            <div class="log-entry">{{logEntry}}</div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

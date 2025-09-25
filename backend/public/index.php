@@ -9,6 +9,22 @@ use HayyaAlSalah\Router;
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
 
+// Set CORS headers first, before any other output
+$corsOrigin = $_ENV['CORS_ORIGINS'] ?? 'http://localhost:4201';
+$corsMethods = $_ENV['CORS_METHODS'] ?? 'GET, POST, PUT, DELETE, OPTIONS';
+$corsHeaders = $_ENV['CORS_HEADERS'] ?? 'Content-Type, Authorization, X-Requested-With';
+
+header("Access-Control-Allow-Origin: $corsOrigin");
+header("Access-Control-Allow-Methods: $corsMethods");
+header("Access-Control-Allow-Headers: $corsHeaders");
+header("Access-Control-Allow-Credentials: true");
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 // Set error reporting based on environment
 if ($_ENV['APP_DEBUG'] === 'true') {
     error_reporting(E_ALL);
@@ -94,17 +110,8 @@ if (strpos($requestPath, '/admin') === 0) {
 
 // Handle API routes
 if (strpos($requestPath, '/api') === 0) {
-    // Set headers for CORS
-    header('Access-Control-Allow-Origin: ' . ($_ENV['CORS_ORIGINS'] ?? '*'));
-    header('Access-Control-Allow-Methods: ' . ($_ENV['CORS_METHODS'] ?? 'GET, POST, PUT, DELETE, OPTIONS'));
-    header('Access-Control-Allow-Headers: ' . ($_ENV['CORS_HEADERS'] ?? 'Content-Type, Authorization'));
+    // Set content type for API responses
     header('Content-Type: application/json');
-
-    // Handle preflight requests
-    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-        http_response_code(200);
-        exit();
-    }
 
     // Remove /api prefix
     $path = substr($requestPath, 4);

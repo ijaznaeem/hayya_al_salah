@@ -32,6 +32,63 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     _searchController.addListener(_filterLessons);
   }
 
+  /// Helper method to determine text direction based on content
+  TextDirection _getTextDirection(String text) {
+    if (text.isEmpty) return TextDirection.ltr;
+
+    // Check if text contains Arabic, Urdu, or other RTL characters
+    final rtlRegex = RegExp(
+        r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u200F\u202B\u202E]');
+    if (rtlRegex.hasMatch(text)) {
+      return TextDirection.rtl;
+    }
+    return TextDirection.ltr;
+  }
+
+  /// Create a text widget with proper Unicode support
+  Widget buildUnicodeText(
+    String text, {
+    TextStyle? style,
+    int? maxLines,
+    TextOverflow? overflow,
+    TextAlign? textAlign,
+  }) {
+    final isRtl = _getTextDirection(text) == TextDirection.rtl;
+
+    // Define fallback fonts for different scripts
+    List<String> fontFallbacks = [
+      if (isRtl) ...[
+        'Noto Sans Arabic',
+        'Noto Nastaliq Urdu',
+        'Arabic Typesetting',
+        'Traditional Arabic',
+        'Segoe UI Historic',
+      ],
+      'Roboto',
+      'Arial',
+      'sans-serif',
+    ];
+
+    return Directionality(
+      textDirection: _getTextDirection(text),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamilyFallback: fontFallbacks,
+          fontSize: style?.fontSize ?? 16,
+          fontWeight: style?.fontWeight,
+          color: style?.color ?? Colors.black87,
+          height: style?.height ??
+              (isRtl ? 1.8 : 1.5), // Better line height for Urdu
+        ),
+        maxLines: maxLines,
+        overflow: overflow,
+        textAlign: textAlign ?? (isRtl ? TextAlign.right : TextAlign.left),
+        textDirection: _getTextDirection(text),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -64,6 +121,13 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         _filteredLessons = lessons;
         _isLoadingLessons = false;
       });
+
+      // Debug: Print first lesson title to see the actual text
+      if (lessons.isNotEmpty) {
+        print('First lesson title: "${lessons.first.title}"');
+        print('Title length: ${lessons.first.title.length}');
+        print('Title codeUnits: ${lessons.first.title.codeUnits}');
+      }
     } catch (e) {
       setState(() {
         _allLessons = _getSampleLessons(); // Fallback to sample data
@@ -99,8 +163,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(
-          widget.topic.title,
+        title: buildUnicodeText(
+          'Topic: ${widget.topic.title}',
           style: GoogleFonts.inter(fontWeight: FontWeight.w600),
         ),
       ),
@@ -123,16 +187,15 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                buildUnicodeText(
                   widget.topic.title,
                   style: GoogleFonts.inter(
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                buildUnicodeText(
                   widget.topic.description,
                   style: GoogleFonts.inter(
                     fontSize: 16,
@@ -375,18 +438,18 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               // Lesson Content
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
+                    buildUnicodeText(
                       lesson.title,
                       style: GoogleFonts.inter(
                         fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                        height: 1.5,
+                        color: Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
+                    buildUnicodeText(
                       lesson.description,
                       style: GoogleFonts.inter(
                         fontSize: 14,

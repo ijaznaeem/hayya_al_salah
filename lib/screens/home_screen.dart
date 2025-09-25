@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
 import '../models/quran_verse.dart';
 import '../models/topic.dart';
 import '../services/api_service.dart';
-import '../services/auth_service.dart';
 import '../services/islamic_calendar_service.dart';
 import '../services/quran_api_service.dart';
 import 'lesson_detail_screen.dart';
-import 'login_screen.dart';
+import 'notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, String> _currentDate = {};
   List<Topic> _topics = [];
   bool _isLoadingTopics = false;
+  int _notificationCount = 0;
 
   @override
   void initState() {
@@ -35,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadCurrentDate();
     _loadRandomVerse();
     _loadTopics();
+    _loadNotificationCount();
   }
 
   void _loadCurrentDate() {
@@ -88,6 +88,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _loadNotificationCount() async {
+    try {
+      await _apiService.initialize();
+      final count = await _apiService.getUnreadNotificationCount();
+      setState(() {
+        _notificationCount = count;
+      });
+    } catch (e) {
+      print('Failed to load notification count: $e');
+      // Keep default count of 0
+    }
+  }
+
   // Fallback sample topics if API fails
   List<Topic> _getSampleTopics() {
     return [
@@ -123,26 +136,62 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         backgroundColor: const Color(0xFF23514C),
         actions: [
-          Consumer<AuthService>(
-            builder: (context, authService, child) {
-              return IconButton(
-                icon: Icon(
-                  authService.isLoggedIn ? Icons.account_circle : Icons.login,
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
                   color: Colors.white,
                 ),
-                onPressed: () {
-                  if (authService.isLoggedIn) {
-                    _showProfileDialog(context, authService);
-                  } else {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                    );
+                onPressed: () async {
+                  // Navigate to notifications screen
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const NotificationScreen(),
+                    ),
+                  );
+
+                  // Refresh notification count when returning from notifications
+                  if (mounted) {
+                    await _loadNotificationCount();
                   }
                 },
-              );
-            },
+                tooltip: 'Notifications',
+              ),
+              // Notification badge
+              if (_notificationCount > 0)
+                Positioned(
+                  right: 2,
+                  top: 2,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white, width: 1),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _notificationCount > 99
+                          ? '99+'
+                          : _notificationCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -502,45 +551,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showProfileDialog(BuildContext context, AuthService authService) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Profile',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (authService.currentUser != null) ...[
-              Text(
-                  'Username: ${authService.currentUser!['username'] ?? 'N/A'}'),
-              Text('Email: ${authService.currentUser!['email'] ?? 'N/A'}'),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await authService.logout();
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out successfully')),
-              );
-            },
-            child: const Text('Logout'),
-          ),
-        ],
       ),
     );
   }

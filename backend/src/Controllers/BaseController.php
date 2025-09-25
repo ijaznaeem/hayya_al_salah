@@ -119,4 +119,75 @@ abstract class BaseController
             ]
         ];
     }
+
+    /**
+     * Convert relative file path to absolute URL
+     */
+    protected function convertToAbsoluteUrl(?string $relativePath): ?string
+    {
+        if (empty($relativePath)) {
+            return null;
+        }
+
+        // If it's already an absolute URL, return as-is
+        if (preg_match('/^https?:\/\//', $relativePath)) {
+            return $relativePath;
+        }
+
+        // Get base URL from environment
+        $baseUrl = rtrim($_ENV['APP_URL'] ?? 'http://localhost:8000', '/');
+        
+        // Remove leading slash from relative path if present
+        $relativePath = ltrim($relativePath, '/');
+        
+        return $baseUrl . '/' . $relativePath;
+    }
+
+    /**
+     * Process lecture data to convert file paths to absolute URLs
+     */
+    protected function processLectureUrls(array $lecture): array
+    {
+        if (isset($lecture['video_url'])) {
+            $lecture['video_url'] = $this->convertToAbsoluteUrl($lecture['video_url']);
+        }
+        
+        if (isset($lecture['thumbnail_url'])) {
+            $lecture['thumbnail_url'] = $this->convertToAbsoluteUrl($lecture['thumbnail_url']);
+        }
+        
+        if (isset($lecture['reference_file_url'])) {
+            $lecture['reference_file_url'] = $this->convertToAbsoluteUrl($lecture['reference_file_url']);
+        }
+
+        return $lecture;
+    }
+
+    /**
+     * Process multiple lectures to convert file paths to absolute URLs
+     */
+    protected function processLecturesUrls(array $lectures): array
+    {
+        return array_map([$this, 'processLectureUrls'], $lectures);
+    }
+
+    /**
+     * Process topic data to convert image path to absolute URL
+     */
+    protected function processTopicUrls(array $topic): array
+    {
+        if (isset($topic['image_url'])) {
+            $topic['image_url'] = $this->convertToAbsoluteUrl($topic['image_url']);
+        }
+
+        return $topic;
+    }
+
+    /**
+     * Process multiple topics to convert image paths to absolute URLs
+     */
+    protected function processTopicsUrls(array $topics): array
+    {
+        return array_map([$this, 'processTopicUrls'], $topics);
+    }
 }

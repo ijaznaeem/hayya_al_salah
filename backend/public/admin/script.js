@@ -4,6 +4,15 @@ class AdminPanel {
         this.baseURL = '/api';
         this.token = localStorage.getItem('admin_token');
         this.currentUser = null;
+        
+        // Pagination state
+        this.lecturesPagination = {
+            currentPage: 1,
+            perPage: 25,
+            total: 0,
+            totalPages: 0
+        };
+        
         this.init();
     }
 
@@ -77,6 +86,72 @@ class AdminPanel {
 
         // File upload functionality
         this.setupFileUploads();
+
+        // Video processing functionality
+        this.setupVideoProcessing();
+    }
+
+    setupPaginationEventListeners() {
+        console.log('Setting up lectures pagination event listeners...');
+        // Lectures pagination
+        const lecturesPerPage = document.getElementById('lecturesPerPage');
+        const lecturesFirstPage = document.getElementById('lecturesFirstPage');
+        const lecturesPrevPage = document.getElementById('lecturesPrevPage');
+        const lecturesNextPage = document.getElementById('lecturesNextPage');
+        const lecturesLastPage = document.getElementById('lecturesLastPage');
+
+        console.log('Pagination elements found:', {
+            lecturesPerPage: !!lecturesPerPage,
+            lecturesFirstPage: !!lecturesFirstPage,
+            lecturesPrevPage: !!lecturesPrevPage,
+            lecturesNextPage: !!lecturesNextPage,
+            lecturesLastPage: !!lecturesLastPage
+        });
+
+        if (lecturesPerPage) {
+            lecturesPerPage.addEventListener('change', (e) => {
+                console.log('Per page changed:', e.target.value);
+                this.lecturesPagination.perPage = parseInt(e.target.value);
+                this.lecturesPagination.currentPage = 1;
+                this.loadLectures();
+            });
+        }
+
+        if (lecturesFirstPage) {
+            lecturesFirstPage.addEventListener('click', () => {
+                console.log('First page clicked');
+                this.lecturesPagination.currentPage = 1;
+                this.loadLectures();
+            });
+        }
+
+        if (lecturesPrevPage) {
+            lecturesPrevPage.addEventListener('click', () => {
+                console.log('Previous page clicked');
+                if (this.lecturesPagination.currentPage > 1) {
+                    this.lecturesPagination.currentPage--;
+                    this.loadLectures();
+                }
+            });
+        }
+
+        if (lecturesNextPage) {
+            lecturesNextPage.addEventListener('click', () => {
+                console.log('Next page clicked');
+                if (this.lecturesPagination.currentPage < this.lecturesPagination.totalPages) {
+                    this.lecturesPagination.currentPage++;
+                    this.loadLectures();
+                }
+            });
+        }
+
+        if (lecturesLastPage) {
+            lecturesLastPage.addEventListener('click', () => {
+                console.log('Last page clicked');
+                this.lecturesPagination.currentPage = this.lecturesPagination.totalPages;
+                this.loadLectures();
+            });
+        }
     }
 
     setupFileUploads() {
@@ -574,6 +649,11 @@ class AdminPanel {
         if (this.currentUser) {
             document.getElementById('adminUsername').textContent = this.currentUser.username;
         }
+        
+        // Setup pagination event listeners after the admin panel is shown
+        console.log('Setting up pagination event listeners...');
+        this.setupPaginationEventListeners();
+        console.log('Pagination event listeners setup complete.');
     }
 
     showSection(sectionName) {
@@ -595,6 +675,7 @@ class AdminPanel {
             users: 'User Management',
             topics: 'Topics Management',
             lectures: 'Lectures Management',
+            'video-processing': 'Video Duration Processing',
             analytics: 'Analytics & Reports'
         };
         document.getElementById('pageTitle').textContent = titles[sectionName];
@@ -617,6 +698,10 @@ class AdminPanel {
             case 'lectures':
                 await this.loadLectures();
                 await this.loadTopics(); // Load topics for the dropdown
+                this.initializeLecturesPagination();
+                break;
+            case 'video-processing':
+                await this.loadVideoProcessingStatus();
                 break;
             case 'analytics':
                 await this.loadAnalytics();
@@ -742,7 +827,8 @@ class AdminPanel {
     async loadLectures() {
         try {
             this.showLoading(true);
-            const response = await this.apiCall('/lectures');
+            const { currentPage, perPage } = this.lecturesPagination;
+            const response = await this.apiCall(`/lectures?page=${currentPage}&per_page=${perPage}`);
             const tbody = document.getElementById('lecturesTableBody');
             
             if (response.data && response.data.length > 0) {
@@ -768,6 +854,11 @@ class AdminPanel {
                 `).join('');
             } else {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center">No lectures found</td></tr>';
+            }
+
+            // Update pagination info
+            if (response.pagination) {
+                this.updateLecturesPagination(response.pagination);
             }
         } catch (error) {
             console.error('Error loading lectures:', error);
@@ -823,6 +914,81 @@ class AdminPanel {
         
         select.innerHTML = '<option value="">All Topics</option>' + options;
         lectureTopicSelect.innerHTML = '<option value="">Select Topic</option>' + options;
+    }
+
+    updateLecturesPagination(pagination) {
+        // Update pagination state
+        this.lecturesPagination.currentPage = pagination.current_page;
+        this.lecturesPagination.perPage = pagination.per_page;
+        this.lecturesPagination.total = pagination.total;
+        this.lecturesPagination.totalPages = pagination.total_pages;
+
+        // Update pagination info text
+        const start = ((pagination.current_page - 1) * pagination.per_page) + 1;
+        const end = Math.min(pagination.current_page * pagination.per_page, pagination.total);
+        document.getElementById('lecturesPaginationInfo').textContent = 
+            `Showing ${start}-${end} of ${pagination.total} lectures`;
+        
+        // Update lectures count in filters
+        document.getElementById('lecturesCount').textContent = `${pagination.total} lectures`;
+
+        // Update button states
+        const firstBtn = document.getElementById('lecturesFirstPage');
+        const prevBtn = document.getElementById('lecturesPrevPage');
+        const nextBtn = document.getElementById('lecturesNextPage');
+        const lastBtn = document.getElementById('lecturesLastPage');
+
+        firstBtn.disabled = !pagination.has_prev;
+        prevBtn.disabled = !pagination.has_prev;
+        nextBtn.disabled = !pagination.has_next;
+        lastBtn.disabled = !pagination.has_next;
+
+        // Update page buttons
+        this.updateLecturesPaginationPages(pagination);
+    }
+
+    updateLecturesPaginationPages(pagination) {
+        const pagesContainer = document.getElementById('lecturesPaginationPages');
+        const currentPage = pagination.current_page;
+        const totalPages = pagination.total_pages;
+        
+        // Calculate page range to display
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        // Adjust start page if we're near the end
+        if (endPage - startPage < maxVisiblePages - 1) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        let pagesHTML = '';
+        
+        for (let i = startPage; i <= endPage; i++) {
+            const isActive = i === currentPage;
+            pagesHTML += `
+                <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'}" 
+                        onclick="adminPanel.goToLecturesPage(${i})"
+                        ${isActive ? 'disabled' : ''}>
+                    ${i}
+                </button>
+            `;
+        }
+        
+        pagesContainer.innerHTML = pagesHTML;
+    }
+
+    goToLecturesPage(page) {
+        this.lecturesPagination.currentPage = page;
+        this.loadLectures();
+    }
+
+    initializeLecturesPagination() {
+        // Set the per-page selector to match current pagination state
+        const perPageSelect = document.getElementById('lecturesPerPage');
+        if (perPageSelect) {
+            perPageSelect.value = this.lecturesPagination.perPage;
+        }
     }
 
     // Topic Management
@@ -991,146 +1157,313 @@ class AdminPanel {
         }
     }
 
-    // Search and Filter
-    async searchLectures(query) {
-        if (query.length < 2) {
-            this.loadLectures();
-            return;
-        }
-        
-        try {
-            const response = await this.apiCall(`/lectures?search=${encodeURIComponent(query)}`);
-            const tbody = document.getElementById('lecturesTableBody');
-            
-            if (response.data && response.data.length > 0) {
-                tbody.innerHTML = response.data.map(lecture => `
-                    <tr>
-                        <td>${lecture.id}</td>
-                        <td>${lecture.title}</td>
-                        <td>${lecture.topic_title || 'Unknown'}</td>
-                        <td>${lecture.duration}</td>
-                        <td>${lecture.lesson_number}</td>
-                        <td>${new Date(lecture.created_at).toLocaleDateString()}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn btn-sm btn-warning" onclick="adminPanel.editLecture(${lecture.id})">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="adminPanel.deleteLecture(${lecture.id})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
+    // Video Processing
+    setupVideoProcessing() {
+        // Refresh status button
+        document.getElementById('refreshStatusBtn').addEventListener('click', () => {
+            this.loadVideoProcessingStatus();
+        });
+
+        // Start processing button
+        document.getElementById('startProcessingBtn').addEventListener('click', () => {
+            this.startVideoProcessing();
+        });
+
+        // Mode toggles
+        document.getElementById('dryRunMode').addEventListener('change', (e) => {
+            const startBtn = document.getElementById('startProcessingBtn');
+            const icon = startBtn.querySelector('i');
+            if (e.target.checked) {
+                startBtn.innerHTML = '<i class="fas fa-eye"></i> Preview Processing';
             } else {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No lectures found</td></tr>';
+                startBtn.innerHTML = '<i class="fas fa-play"></i> Start Processing';
             }
+        });
+    }
+
+    async loadVideoProcessingStatus() {
+        try {
+            const response = await this.apiCall('/admin/videos/duration/status', 'GET');
+            const status = response.data || response;
+
+            document.getElementById('totalVideos').textContent = status.total_videos || 0;
+            document.getElementById('videosWithDuration').textContent = status.with_duration || 0;
+            document.getElementById('videosNeedProcessing').textContent = status.needs_processing || 0;
+            
+            const ffmpegStatusEl = document.getElementById('ffmpegStatus');
+            if (status.ffmpeg_available) {
+                ffmpegStatusEl.textContent = 'Available';
+                ffmpegStatusEl.className = 'status-available';
+            } else {
+                ffmpegStatusEl.textContent = 'Not Available';
+                ffmpegStatusEl.className = 'status-unavailable';
+            }
+
+            // Update processing button state
+            const startBtn = document.getElementById('startProcessingBtn');
+            if (!status.ffmpeg_available) {
+                startBtn.disabled = true;
+                startBtn.title = 'FFmpeg is not available on the server';
+            } else if (status.needs_processing === 0) {
+                startBtn.disabled = true;
+                startBtn.title = 'No videos need processing';
+            } else {
+                startBtn.disabled = false;
+                startBtn.title = '';
+            }
+
         } catch (error) {
-            console.error('Error searching lectures:', error);
+            console.error('Error loading video processing status:', error);
+            this.showToast('Failed to load processing status', 'error');
         }
     }
 
-    async filterLecturesByTopic(topicId) {
-        if (!topicId) {
-            this.loadLectures();
-            return;
-        }
+    async startVideoProcessing() {
+        const dryRun = document.getElementById('dryRunMode').checked;
+        const limit = parseInt(document.getElementById('processingLimit').value) || 0;
+        const force = document.getElementById('forceMode').checked;
+
+        const startBtn = document.getElementById('startProcessingBtn');
+        const originalText = startBtn.innerHTML;
         
         try {
-            const response = await this.apiCall(`/topics/${topicId}/lectures`);
-            const tbody = document.getElementById('lecturesTableBody');
+            // Show processing state
+            startBtn.disabled = true;
+            startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             
-            if (response.data && response.data.length > 0) {
-                tbody.innerHTML = response.data.map(lecture => `
-                    <tr>
-                        <td>${lecture.id}</td>
-                        <td>${lecture.title}</td>
-                        <td>${lecture.topic_title || 'Unknown'}</td>
-                        <td>${lecture.duration}</td>
-                        <td>${lecture.lesson_number}</td>
-                        <td>${new Date(lecture.created_at).toLocaleDateString()}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn btn-sm btn-warning" onclick="adminPanel.editLecture(${lecture.id})">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="adminPanel.deleteLecture(${lecture.id})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No lectures found for this topic</td></tr>';
-            }
+            // Show progress section
+            const progressSection = document.getElementById('processingProgress');
+            progressSection.style.display = 'block';
+            
+            // Hide previous results
+            const resultsSection = document.getElementById('processingResults');
+            resultsSection.style.display = 'none';
+
+            const response = await this.apiCall('/admin/videos/duration/process', 'POST', {
+                dry_run: dryRun,
+                limit: limit,
+                force: force
+            });
+
+            const result = response.data || response;
+            this.showProcessingResults(result);
+            
+            // Refresh status after processing
+            await this.loadVideoProcessingStatus();
+            
+            this.showToast(
+                dryRun ? 'Preview completed successfully' : 'Processing completed successfully', 
+                'success'
+            );
+
         } catch (error) {
-            console.error('Error filtering lectures:', error);
+            console.error('Error processing videos:', error);
+            this.showToast('Processing failed: ' + (error.message || 'Unknown error'), 'error');
+        } finally {
+            // Reset button state
+            startBtn.disabled = false;
+            startBtn.innerHTML = originalText;
+            
+            // Hide progress section
+            document.getElementById('processingProgress').style.display = 'none';
         }
+    }
+
+    showProcessingResults(result) {
+        const resultsSection = document.getElementById('processingResults');
+        const logEl = document.getElementById('processingLog');
+        const summaryEl = document.getElementById('processingSummary');
+
+        // Show results section
+        resultsSection.style.display = 'block';
+
+        // Clear previous results
+        logEl.textContent = '';
+        summaryEl.innerHTML = '';
+
+        // Show summary statistics
+        const stats = result.stats || {};
+        summaryEl.innerHTML = `
+            <div class="summary-item">
+                <div class="number">${stats.processed || 0}</div>
+                <div class="label">Processed</div>
+            </div>
+            <div class="summary-item">
+                <div class="number">${stats.updated || 0}</div>
+                <div class="label">Updated</div>
+            </div>
+            <div class="summary-item">
+                <div class="number">${stats.errors || 0}</div>
+                <div class="label">Errors</div>
+            </div>
+            <div class="summary-item">
+                <div class="number">${stats.skipped || 0}</div>
+                <div class="label">Skipped</div>
+            </div>
+        `;
+
+        // Show detailed video results
+        let logContent = '';
+        
+        if (result.message) {
+            logContent += result.message + '\n\n';
+        }
+
+        if (result.dry_run) {
+            logContent += '=== DRY RUN MODE - NO CHANGES MADE ===\n\n';
+        }
+
+        const videos = result.videos || [];
+        videos.forEach((video, index) => {
+            logContent += `[${index + 1}/${videos.length}] ${video.title}\n`;
+            logContent += `  Current duration: ${video.current_duration || 'NULL'}\n`;
+            logContent += `  Video URL: ${video.video_url}\n`;
+            
+            if (video.status === 'success' || video.status === 'updated') {
+                logContent += `  ✓ SUCCESS: Updated duration to ${video.new_duration}\n`;
+            } else if (video.status === 'dry_run') {
+                logContent += `  👁 DRY RUN: Would update duration to ${video.new_duration}\n`;
+            } else if (video.status === 'error') {
+                logContent += `  ✗ ERROR: ${video.error}\n`;
+            } else if (video.status === 'skipped') {
+                logContent += `  ⚠ SKIPPED: ${video.error}\n`;
+            }
+            
+            logContent += '\n';
+        });
+
+        logContent += '\n=== SUMMARY ===\n';
+        logContent += `Videos processed: ${stats.processed || 0}\n`;
+        logContent += `Successfully updated: ${stats.updated || 0}\n`;
+        logContent += `Errors: ${stats.errors || 0}\n`;
+        logContent += `Skipped: ${stats.skipped || 0}\n`;
+
+        if (result.dry_run) {
+            logContent += '\nThis was a dry run - no changes were made to the database.\n';
+            logContent += 'Uncheck "Dry Run" to apply changes.\n';
+        }
+
+        logEl.textContent = logContent;
+
+        // Scroll to results
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
 
     // Utility Methods
-    async apiCall(endpoint, method = 'GET', data = null) {
-        const options = {
-            method,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
-
-        if (this.token) {
-            options.headers.Authorization = `Bearer ${this.token}`;
-        }
-
-        if (data && method !== 'GET') {
-            options.body = JSON.stringify(data);
-        }
-
-        const response = await fetch(`${this.baseURL}${endpoint}`, options);
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.error || 'API request failed');
-        }
-
-        return result;
-    }
-
-    closeModal(modalId) {
-        document.getElementById(modalId).classList.remove('active');
-    }
-
-    showLoading(show) {
-        const spinner = document.getElementById('loadingSpinner');
+    showLoading(show = true) {
+        const loadingOverlay = document.querySelector('.loading-overlay') || this.createLoadingOverlay();
         if (show) {
-            spinner.classList.add('active');
+            loadingOverlay.style.display = 'flex';
         } else {
-            spinner.classList.remove('active');
+            loadingOverlay.style.display = 'none';
         }
+    }
+
+    createLoadingOverlay() {
+        const overlay = document.createElement('div');
+        overlay.className = 'loading-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        `;
+        
+        const spinner = document.createElement('div');
+        spinner.style.cssText = `
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #059669;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        `;
+        
+        overlay.appendChild(spinner);
+        document.body.appendChild(overlay);
+        
+        // Add CSS animation
+        if (!document.querySelector('#loading-styles')) {
+            const style = document.createElement('style');
+            style.id = 'loading-styles';
+            style.textContent = `
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        return overlay;
     }
 
     showError(message) {
-        const errorDiv = document.getElementById('loginError');
-        errorDiv.textContent = message;
-        errorDiv.classList.add('show');
+        const errorEl = document.getElementById('loginError');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+            setTimeout(() => errorEl.classList.remove('show'), 5000);
+        } else {
+            this.showToast(message, 'error');
+        }
     }
 
     showToast(message, type = 'info') {
-        const container = document.getElementById('toastContainer');
+        // Create toast container if it doesn't exist
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            container.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10000;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            `;
+            document.body.appendChild(container);
+        }
+
+        // Create toast element
         const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
+        toast.className = `toast toast-${type}`;
+        toast.style.cssText = `
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
+        `;
         toast.textContent = message;
-        
+
         container.appendChild(toast);
-        
+
         // Trigger animation
-        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+        }, 100);
         
         // Remove after 5 seconds
         setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => container.removeChild(toast), 300);
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (container.contains(toast)) {
+                    container.removeChild(toast);
+                }
+            }, 300);
         }, 5000);
     }
 
@@ -1140,39 +1473,24 @@ class AdminPanel {
         this.showToast('Data refreshed', 'success');
     }
 
-    async loadTopicsForModal() {
-        try {
-            const response = await this.apiCall('/topics', 'GET');
-            const topics = response.data || response;
-            
-            const select = document.getElementById('lectureTopicId');
-            if (!select) {
-                console.error('lectureTopicId select element not found');
-                return;
-            }
-            
-            select.innerHTML = '<option value="">Select Topic</option>';
-            
-            if (Array.isArray(topics)) {
-                topics.forEach(topic => {
-                    const option = document.createElement('option');
-                    option.value = topic.id;
-                    option.textContent = topic.title;
-                    select.appendChild(option);
-                });
-            } else {
-                console.error('Topics is not an array:', topics);
-            }
-        } catch (error) {
-            console.error('Failed to load topics for modal:', error);
-            this.showToast('Failed to load topics', 'error');
-        }
-    }
+    // ...existing code...
 }
 
 // Initialize admin panel when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.adminPanel = new AdminPanel();
+    
+    // Add debugging buttons for testing pagination without login
+    if (window.location.search.includes('debug=true')) {
+        const debugPanel = document.createElement('div');
+        debugPanel.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 10000; background: #f0f0f0; padding: 10px; border: 1px solid #ccc;';
+        debugPanel.innerHTML = `
+            <h4>Debug Panel</h4>
+            <button onclick="window.adminPanel.showAdminPanel(); window.adminPanel.showSection('lectures');">Show Lectures</button>
+            <button onclick="window.adminPanel.testPagination();">Test Pagination</button>
+        `;
+        document.body.appendChild(debugPanel);
+    }
 });
 
 // Close modals when clicking outside
