@@ -44,9 +44,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ? Colors.white
                   : const Color(0xFF23514C),
             ),
-            actions: [
+            actions: const [
               IconButton(
-                icon: const Icon(Icons.open_in_browser),
+                icon: Icon(Icons.open_in_browser),
                 tooltip: 'Open in browser',
                 onPressed: openPrivacyPolicyUrl,
               ),

@@ -8,13 +8,16 @@
     
     <!-- Required Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Network state permission for download management -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
         android:label="Hayya Alal Salah"
         android:icon="@mipmap/launcher_icon"
         android:networkSecurityConfig="@xml/network_security_config"
         android:largeHeap="true"
         android:hardwareAccelerated="true"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:requestLegacyExternalStorage="true">
         
         <!-- 16 KB Page Size Support Metadata -->
         <meta-data
