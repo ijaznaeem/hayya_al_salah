@@ -1,0 +1,117 @@
+workflows:
+  ios-workflow:
+    name: iOS Workflow
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.pakperegrine.hayya-alal-salah
+      flutter: stable
+      groups:
+        - app_store_credentials
+      vars:
+        BUNDLE_ID: "com.pakperegrine.hayya-alal-salah"
+        XCODE_WORKSPACE: "Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+        APP_STORE_APPLE_ID: 6446369599  # Your app's Apple ID from App Store Connect
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+          
+      - name: Install pods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+          
+      - name: Flutter analyze
+        script: |
+          flutter analyze || true
+          
+      - name: Flutter test
+        script: |
+          flutter test || true
+          
+      - name: Flutter build ipa
+        script: |
+          flutter build ipa --release \
+                    name: 2.3.2 \
+            --build-number=$BUILD_NUMBER
+            
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+      
+    publishing:
+      email:
+        recipients:
+          - pakperegrine@gmail.com
+        notify:
+          success: true
+          failure: true
+
+      app_store_connect:
+        auth: integration
+
+        # TestFlight (optional but recommended)
+        submit_to_testflight: true
+        beta_groups:
+          - "App Store Connect Users"     # change if your group name differs
+        expire_build_submitted_for_review: true
+
+        # App Store submission
+        submit_to_app_store: true
+        cancel_previous_submissions: true
+        release_type: AFTER_APPROVAL      # MANUAL | AFTER_APPROVAL | SCHEDULED
+        # earliest_release_date: 2025-10-10T17:00:00+05:00  # only if release_type=SCHEDULED
+        phased_release: false
+        # copyright: "2025 Medhouse Group"
+          
+  android-workflow:
+    name: Android Workflow  
+    max_build_duration: 120
+    instance_type: linux_x2
+    environment:
+      android_signing:
+        - keystore_reference
+      flutter: stable
+      groups:
+        - google_play
+    scripts:
+      - name: Set up debug keystore
+        script: |
+          set -ex
+          keytool -genkeypair \
+            -alias androiddebugkey \
+            -keypass android \
+            -keystore ~/.android/debug.keystore \
+            -storepass android \
+            -dname "CN=Android Debug,O=Android,C=US" \
+            -validity 365 \
+            -keyalg RSA \
+            -keysize 2048
+            
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+          
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+          
+      - name: Build APK with Flutter
+        script: |
+          flutter build apk --release
+          
+    artifacts:
+      - build/app/outputs/**/*.apk
+      - build/app/outputs/**/mapping.txt
+      - flutter_drive.log
+      
+    publishing:
+      email:
+        recipients:
+          - pakperegrine@gmail.com

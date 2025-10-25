@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../services/islamic_calendar_service.dart';
 import '../services/quran_api_service.dart';
 import 'lesson_detail_screen.dart';
+import 'prayer_animation_screen.dart';
 import 'notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -104,24 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Fallback sample topics if API fails
   List<Topic> _getSampleTopics() {
     return [
-      Topic(
-        id: '1',
-        title: 'Salah Lessons',
-        description: 'By Dr. Farhat Hashmi',
-        imageUrl: '',
-        lessonsCount: 80,
-        duration: '2 hours',
-        lessons: [],
-      ),
-      Topic(
-        id: '2',
-        title: 'Salah Guide',
-        description: 'Step by Step Salah guide',
-        imageUrl: '',
-        lessonsCount: 12,
-        duration: '3 hours',
-        lessons: [],
-      ),
+     
     ];
   }
 
@@ -480,12 +464,22 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LessonDetailScreen(topic: topic),
-            ),
-          );
+
+          if (topic.action == 'lectures') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LessonDetailScreen(topic: topic),
+              ),
+            );
+          } else if (topic.action == 'prayer') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PrayerAnimationScreen(topic: topic),
+              ),
+            );
+          }
         },
         borderRadius: BorderRadius.circular(12),
         child: Column(
